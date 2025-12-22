@@ -6,27 +6,30 @@
 //
 
 import SwiftUI
-import SwiftData
 
 @main
 struct stickers_genApp: App {
-    var sharedModelContainer: ModelContainer = {
-        let schema = Schema([
-            Item.self,
-        ])
-        let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
-
-        do {
-            return try ModelContainer(for: schema, configurations: [modelConfiguration])
-        } catch {
-            fatalError("Could not create ModelContainer: \(error)")
-        }
-    }()
+    init() {
+        // 初始化服务
+        setupServices()
+    }
 
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            HomeView()
         }
-        .modelContainer(sharedModelContainer)
+    }
+
+    // MARK: - Setup Services
+    private func setupServices() {
+        // 初始化数据库
+        Task {
+            await DatabaseManager.shared.initialize()
+        }
+
+        // 初始化文件存储（在init中已自动初始化）
+        _ = FileStorageManager.shared
+
+        print("✅ Sticker-Gen App initialized")
     }
 }

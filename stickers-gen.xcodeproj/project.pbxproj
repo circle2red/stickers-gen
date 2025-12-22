@@ -6,6 +6,11 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		D47C18022EF99B150053B03C /* SQLite in Frameworks */ = {isa = PBXBuildFile; productRef = D47C18012EF99B150053B03C /* SQLite */; };
+		D47C18252EF9A1820053B03C /* Zip in Frameworks */ = {isa = PBXBuildFile; productRef = D47C18242EF9A1820053B03C /* Zip */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
 		D47C17D02EF987A10053B03C /* stickers-gen.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "stickers-gen.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -23,6 +28,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D47C18252EF9A1820053B03C /* Zip in Frameworks */,
+				D47C18022EF99B150053B03C /* SQLite in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -33,6 +40,7 @@
 			isa = PBXGroup;
 			children = (
 				D47C17D22EF987A10053B03C /* stickers-gen */,
+				D47C17FF2EF99ABF0053B03C /* Frameworks */,
 				D47C17D12EF987A10053B03C /* Products */,
 			);
 			sourceTree = "<group>";
@@ -43,6 +51,13 @@
 				D47C17D02EF987A10053B03C /* stickers-gen.app */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		D47C17FF2EF99ABF0053B03C /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -65,6 +80,8 @@
 			);
 			name = "stickers-gen";
 			packageProductDependencies = (
+				D47C18012EF99B150053B03C /* SQLite */,
+				D47C18242EF9A1820053B03C /* Zip */,
 			);
 			productName = "stickers-gen";
 			productReference = D47C17D02EF987A10053B03C /* stickers-gen.app */;
@@ -94,6 +111,10 @@
 			);
 			mainGroup = D47C17C72EF987A10053B03C;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				D47C18002EF99B150053B03C /* XCRemoteSwiftPackageReference "SQLite" */,
+				D47C18232EF9A1820053B03C /* XCRemoteSwiftPackageReference "Zip" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = D47C17D12EF987A10053B03C /* Products */;
 			projectDirPath = "";
@@ -320,6 +341,38 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		D47C18002EF99B150053B03C /* XCRemoteSwiftPackageReference "SQLite" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/stephencelis/SQLite.swift";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.15.4;
+			};
+		};
+		D47C18232EF9A1820053B03C /* XCRemoteSwiftPackageReference "Zip" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/marmelroy/Zip";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.1.2;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		D47C18012EF99B150053B03C /* SQLite */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D47C18002EF99B150053B03C /* XCRemoteSwiftPackageReference "SQLite" */;
+			productName = SQLite;
+		};
+		D47C18242EF9A1820053B03C /* Zip */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D47C18232EF9A1820053B03C /* XCRemoteSwiftPackageReference "Zip" */;
+			productName = Zip;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = D47C17C82EF987A10053B03C /* Project object */;
 }
