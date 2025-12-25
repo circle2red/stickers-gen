@@ -253,7 +253,7 @@ actor FileStorageManager {
 
         // 计算stickers目录
         if let enumerator = fileManager.enumerator(at: URL.stickersDirectory, includingPropertiesForKeys: [.fileSizeKey]) {
-            for case let fileURL as URL in enumerator {
+            while let fileURL = enumerator.nextObject() as? URL {
                 if let size = fileManager.fileSize(at: fileURL) {
                     totalSize += Int64(size)
                     fileCount += 1
@@ -263,7 +263,7 @@ actor FileStorageManager {
 
         // 计算thumbnails目录
         if let enumerator = fileManager.enumerator(at: URL.thumbnailsDirectory, includingPropertiesForKeys: [.fileSizeKey]) {
-            for case let fileURL as URL in enumerator {
+            while let fileURL = enumerator.nextObject() as? URL {
                 if let size = fileManager.fileSize(at: fileURL) {
                     totalSize += Int64(size)
                 }

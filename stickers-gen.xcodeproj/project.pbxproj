@@ -12,13 +12,13 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		D47C17D02EF987A10053B03C /* stickers-gen.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "stickers-gen.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		D47C17D02EF987A10053B03C /* Sticker Man.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Sticker Man.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		D47C17D22EF987A10053B03C /* stickers-gen */ = {
+		D47C17D22EF987A10053B03C /* sticker-man */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = "stickers-gen";
+			path = "sticker-man";
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -39,7 +39,7 @@
 		D47C17C72EF987A10053B03C = {
 			isa = PBXGroup;
 			children = (
-				D47C17D22EF987A10053B03C /* stickers-gen */,
+				D47C17D22EF987A10053B03C /* sticker-man */,
 				D47C17FF2EF99ABF0053B03C /* Frameworks */,
 				D47C17D12EF987A10053B03C /* Products */,
 			);
@@ -48,7 +48,7 @@
 		D47C17D12EF987A10053B03C /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				D47C17D02EF987A10053B03C /* stickers-gen.app */,
+				D47C17D02EF987A10053B03C /* Sticker Man.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -63,9 +63,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		D47C17CF2EF987A10053B03C /* stickers-gen */ = {
+		D47C17CF2EF987A10053B03C /* Sticker Man */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = D47C17DD2EF987A20053B03C /* Build configuration list for PBXNativeTarget "stickers-gen" */;
+			buildConfigurationList = D47C17DD2EF987A20053B03C /* Build configuration list for PBXNativeTarget "Sticker Man" */;
 			buildPhases = (
 				D47C17CC2EF987A10053B03C /* Sources */,
 				D47C17CD2EF987A10053B03C /* Frameworks */,
@@ -76,15 +76,15 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				D47C17D22EF987A10053B03C /* stickers-gen */,
+				D47C17D22EF987A10053B03C /* sticker-man */,
 			);
-			name = "stickers-gen";
+			name = "Sticker Man";
 			packageProductDependencies = (
 				D47C18012EF99B150053B03C /* SQLite */,
 				D47C18242EF9A1820053B03C /* Zip */,
 			);
 			productName = "stickers-gen";
-			productReference = D47C17D02EF987A10053B03C /* stickers-gen.app */;
+			productReference = D47C17D02EF987A10053B03C /* Sticker Man.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -103,11 +103,11 @@
 				};
 			};
 			buildConfigurationList = D47C17CB2EF987A10053B03C /* Build configuration list for PBXProject "stickers-gen" */;
-			developmentRegion = en;
+			developmentRegion = "zh-Hans";
 			hasScannedForEncodings = 0;
 			knownRegions = (
-				en,
 				Base,
+				"zh-Hans",
 			);
 			mainGroup = D47C17C72EF987A10053B03C;
 			minimizedProjectReferenceProxies = 1;
@@ -120,7 +120,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				D47C17CF2EF987A10053B03C /* stickers-gen */,
+				D47C17CF2EF987A10053B03C /* Sticker Man */,
 			);
 		};
 /* End PBXProject section */
@@ -279,12 +279,13 @@
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "tcamp-assigment.stickers-gen";
+				PRODUCT_BUNDLE_IDENTIFIER = "tcamp-assigment.sticker-man";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -306,12 +307,13 @@
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "tcamp-assigment.stickers-gen";
+				PRODUCT_BUNDLE_IDENTIFIER = "tcamp-assigment.sticker-man";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -331,7 +333,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		D47C17DD2EF987A20053B03C /* Build configuration list for PBXNativeTarget "stickers-gen" */ = {
+		D47C17DD2EF987A20053B03C /* Build configuration list for PBXNativeTarget "Sticker Man" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				D47C17DE2EF987A20053B03C /* Debug */,

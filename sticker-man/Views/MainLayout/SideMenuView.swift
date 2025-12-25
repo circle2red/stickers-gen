@@ -58,7 +58,7 @@ struct SideMenuView: View {
                             .font(.system(size: 50))
                             .foregroundColor(.blue)
 
-                        Text("Sticker-Gen")
+                        Text("StickerMan")
                             .font(.title2)
                             .fontWeight(.bold)
 
@@ -122,11 +122,11 @@ struct SideMenuView: View {
                     VStack(spacing: 4) {
                         Text("Version 1.0.0")
                             .font(.caption2)
-                            .foregroundColor(.secondary)
+                            .foregroundStyle(.secondary)
 
-                        Text("© 2025 Sticker-Gen")
+                        Text("For 2025 Tencent TCamp Assignment")
                             .font(.caption2)
-                            .foregroundColor(.secondary)
+                            .foregroundStyle(.secondary)
                     }
                     .frame(maxWidth: .infinity)
                     .padding(.bottom, 30)

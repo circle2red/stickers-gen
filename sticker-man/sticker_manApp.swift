@@ -1,6 +1,6 @@
 //
-//  stickers_genApp.swift
-//  stickers-gen
+//  sticker_manApp.swift
+//  sticker man
 //
 //  Created by Chmm on 2025/12/22.
 //
@@ -8,7 +8,7 @@
 import SwiftUI
 
 @main
-struct stickers_genApp: App {
+struct sticker_manApp: App {
     init() {
         // 初始化服务
         setupServices()
@@ -30,6 +30,6 @@ struct stickers_genApp: App {
         // 初始化文件存储（在init中已自动初始化）
         _ = FileStorageManager.shared
 
-        print("✅ Sticker-Gen App initialized")
+        print("✅ Sticker Man App initialized")
     }
 }
