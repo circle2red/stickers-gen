@@ -24,11 +24,12 @@ class EditorViewModel: ObservableObject {
     @Published var brushWidth: CGFloat = 4.0
     @Published var showColorPicker = false
     @Published var showTextEditor = false
+    @Published var showTextColorPicker = false
+    @Published var textColor: Color = .white
 
-    // Crop states
-    @Published var cropRect: CGRect?
-    @Published var isCropping = false
-    @Published var paddingAmount: CGFloat = 0 // 白边宽度（像素）
+    // 白边状态
+    @Published var hasBottomPadding = false
+    private var imageWithoutPadding: UIImage?
 
     // Error handling
     @Published var showError = false
@@ -59,24 +60,39 @@ class EditorViewModel: ObservableObject {
     // MARK: - Tool Management
     func selectTool(_ tool: EditorTool) {
         currentTool = tool
+
+        // 选中画笔或橡皮擦时，取消文本选中
+        if tool == .brush || tool == .eraser {
+            selectedOverlayId = nil
+        }
+
+        // 更新工具（包括禁用/启用 Canvas 交互）
         updateTool()
 
-        // 如果选择文本工具，显示文本编辑器
+        // 文本工具：打开文本编辑对话框添加新文本
         if tool == .text {
             showTextEditor = true
         }
     }
 
+    func deselectAllTools() {
+        currentTool = .none
+        selectedOverlayId = nil
+        updateTool()
+    }
+
     private func updateTool() {
         switch currentTool {
         case .brush:
+            canvasView.isUserInteractionEnabled = true
             let ink = PKInkingTool(.pen, color: UIColor(brushColor), width: brushWidth)
             canvasView.tool = ink
         case .eraser:
+            canvasView.isUserInteractionEnabled = true
             canvasView.tool = PKEraserTool(.bitmap)
-        case .none, .text, .crop:
-            // 这些工具不使用 PKTool
-            break
+        case .none, .text:
+            // 禁用 Canvas 交互，防止继续绘画
+            canvasView.isUserInteractionEnabled = false
         }
     }
 
@@ -94,6 +110,13 @@ class EditorViewModel: ObservableObject {
         }
     }
 
+    func updateTextColor(_ color: Color) {
+        textColor = color
+        if let selectedId = selectedOverlayId {
+            updateTextOverlay(selectedId, color: color)
+        }
+    }
+
     // MARK: - Text Overlay Management
     func addTextOverlay(_ text: String) {
         // 计算图片中心位置（基于原始图片尺寸）
@@ -106,9 +129,12 @@ class EditorViewModel: ObservableObject {
             text: text,
             position: imageCenter,
             fontSize: 32,
-            color: .white
+            color: textColor
         )
         textOverlays.append(overlay)
+
+        // 自动选中新添加的文本
+        selectedOverlayId = overlay.id
     }
 
     func updateTextOverlay(_ id: UUID, text: String? = nil, position: CGPoint? = nil, fontSize: CGFloat? = nil, color: Color? = nil) {
@@ -125,59 +151,100 @@ class EditorViewModel: ObservableObject {
         }
         if let color = color {
             textOverlays[index].color = color
+            textColor = color // 同步更新textColor状态
         }
     }
 
     func deleteTextOverlay(_ id: UUID) {
         textOverlays.removeAll { $0.id == id }
+        // 删除后取消选中所有工具
+        if selectedOverlayId == id {
+            deselectAllTools()
+        }
     }
 
-    // MARK: - Crop
-    func startCrop() {
-        isCropping = true
-        currentTool = .crop
+    // MARK: - Text Overlay Constraints
+    /// 确保所有文本框都在图片边界内
+    private func constrainTextOverlaysToImageBounds() {
+        let imageSize = originalImage.size
 
-        // 初始化裁切区域为整个图片
-        cropRect = CGRect(x: 0, y: 0, width: originalImage.size.width, height: originalImage.size.height)
-        paddingAmount = 0
+        for index in textOverlays.indices {
+            let overlay = textOverlays[index]
+
+            // 计算文本的实际尺寸
+            let textSize = calculateTextSize(for: overlay)
+
+            // 计算半宽和半高
+            let halfWidth = textSize.width / 2
+            let halfHeight = textSize.height / 2
+
+            // 计算边界
+            let minX = halfWidth
+            let maxX = imageSize.width - halfWidth
+            let minY = halfHeight
+            let maxY = imageSize.height - halfHeight
+
+            // 约束位置
+            var newX = overlay.position.x
+            var newY = overlay.position.y
+
+            newX = max(minX, min(maxX, newX))
+            newY = max(minY, min(maxY, newY))
+
+            // 如果位置有变化，更新位置
+            if newX != overlay.position.x || newY != overlay.position.y {
+                textOverlays[index].position = CGPoint(x: newX, y: newY)
+            }
+        }
     }
 
-    func applyCrop() {
-        guard let cropRect = cropRect else { return }
+    /// 计算文本的实际尺寸（包括padding）
+    private func calculateTextSize(for overlay: TextOverlay) -> CGSize {
+        let paragraphStyle = NSMutableParagraphStyle()
+        paragraphStyle.alignment = .center
 
-        // 如果有白边，添加白边；否则裁切图片
-        if paddingAmount > 0 {
-            // 添加白边
-            if let paddedImage = addPadding(to: originalImage, padding: paddingAmount) {
+        let attributes: [NSAttributedString.Key: Any] = [
+            .font: UIFont.systemFont(ofSize: overlay.fontSize, weight: .bold),
+            .strokeWidth: -3.0,
+            .paragraphStyle: paragraphStyle
+        ]
+
+        let attributedString = NSAttributedString(string: overlay.text, attributes: attributes)
+        let textSize = attributedString.size()
+
+        // 加上padding（每边8点）
+        return CGSize(width: textSize.width + 16, height: textSize.height + 16)
+    }
+
+    // MARK: - Bottom Padding (白边)
+    func toggleBottomPadding() {
+        hasBottomPadding.toggle()
+
+        if hasBottomPadding {
+            // 添加底部白边
+            if imageWithoutPadding == nil {
+                imageWithoutPadding = originalImage
+            }
+            if let paddedImage = addBottomPadding(to: originalImage, percentage: 0.2) {
                 originalImage = paddedImage
             }
         } else {
-            // 裁切图片
-            if let croppedImage = cropImage(originalImage, to: cropRect) {
-                originalImage = croppedImage
+            // 移除底部白边
+            if let original = imageWithoutPadding {
+                originalImage = original
+                imageWithoutPadding = nil
             }
         }
 
-        isCropping = false
-        self.cropRect = nil
-        paddingAmount = 0
+        // 调整白边后，确保所有文本框都在图片边界内
+        constrainTextOverlaysToImageBounds()
     }
 
-    func cancelCrop() {
-        isCropping = false
-        cropRect = nil
-        paddingAmount = 0
-    }
-
-    private func cropImage(_ image: UIImage, to rect: CGRect) -> UIImage? {
-        guard let cgImage = image.cgImage?.cropping(to: rect) else { return nil }
-        return UIImage(cgImage: cgImage, scale: image.scale, orientation: image.imageOrientation)
-    }
-
-    private func addPadding(to image: UIImage, padding: CGFloat) -> UIImage? {
+    private func addBottomPadding(to image: UIImage, percentage: CGFloat) -> UIImage? {
+        let paddingHeight = image.size.height * percentage
         let newSize = CGSize(
-            width: image.size.width + padding * 2,
-            height: image.size.height + padding * 2
+            width: image.size.width,
+            height: image.size.height + paddingHeight
         )
 
         let format = UIGraphicsImageRendererFormat()
@@ -191,9 +258,8 @@ class EditorViewModel: ObservableObject {
             UIColor.white.setFill()
             context.fill(CGRect(origin: .zero, size: newSize))
 
-            // 在中心绘制原图
-            let drawPoint = CGPoint(x: padding, y: padding)
-            image.draw(at: drawPoint)
+            // 在顶部绘制原图
+            image.draw(at: .zero)
         }
     }
 
@@ -316,7 +382,6 @@ enum EditorTool {
     case brush
     case eraser
     case text
-    case crop
 }
 
 // MARK: - Text Overlay Model
