@@ -7,6 +7,24 @@
 
 import SwiftUI
 
+/// 可识别的图片包装类，用于 fullScreenCover
+struct IdentifiableImage: Identifiable {
+    let id = UUID()
+    let image: UIImage
+}
+
+/// 可识别的查看器索引包装类，用于 fullScreenCover
+struct IdentifiableViewerIndex: Identifiable {
+    let id = UUID()
+    let index: Int
+}
+
+/// 待执行的操作类型
+enum PendingAction {
+    case editTags(Sticker)
+    case editImage(Sticker)
+}
+
 /// 表情包图库视图（从HomeView提取）
 struct StickerLibraryView: View {
     @StateObject private var viewModel = StickerLibraryViewModel()
@@ -15,13 +33,14 @@ struct StickerLibraryView: View {
     @State private var showingTagEditor = false
     @State private var showingActionSheet = false
     @State private var showingImport = false
-    @State private var showingImageViewer = false
-    @State private var showingEditor = false
+    @State private var viewerIndex: IdentifiableViewerIndex?
     @State private var selectedSticker: Sticker?
-    @State private var selectedStickerIndex: Int = 0
     @State private var editingTags: [String] = []
     @State private var allTags: [String] = []
-    @State private var editorImage: UIImage?
+    @State private var editorImage: IdentifiableImage?
+
+    // Pending action - 用于在关闭一个 fullScreenCover 后执行另一个操作
+    @State private var pendingAction: PendingAction?
 
     // Share
     @State private var shareItem: URL?
@@ -121,25 +140,33 @@ struct StickerLibraryView: View {
                     }
                 }
         }
-        .fullScreenCover(isPresented: $showingImageViewer) {
+        .fullScreenCover(item: $viewerIndex) { identifiableIndex in
             ImageViewerView(
                 viewModel: viewModel,
-                initialIndex: selectedStickerIndex,
+                initialIndex: identifiableIndex.index,
                 onMenuAction: { action, sticker in
                     handleMenuAction(action, sticker: sticker)
                 }
             )
-        }
-        .fullScreenCover(isPresented: $showingEditor) {
-            if let editorImage = editorImage {
-                EditorView(image: editorImage, sticker: selectedSticker)
-                    .onDisappear {
-                        // 编辑完成后刷新列表
-                        Task {
-                            await viewModel.refresh()
-                        }
-                    }
+            .onDisappear {
+                // ImageViewerView 完全关闭后，执行 pending action
+                if let action = pendingAction {
+                    pendingAction = nil
+                    executePendingAction(action)
+                }
             }
+        }
+        .fullScreenCover(item: $editorImage) { identifiableImage in
+            EditorView(image: identifiableImage.image, sticker: selectedSticker)
+                .onDisappear {
+                    // 编辑完成后刷新列表并清理状态
+                    Task {
+                        await viewModel.refresh()
+                    }
+                    // 清理编辑器图片状态
+                    self.editorImage = nil
+                    self.selectedSticker = nil
+                }
         }
         .alert("错误", isPresented: $viewModel.showError) {
             Button("确定", role: .cancel) {
@@ -193,8 +220,8 @@ struct StickerLibraryView: View {
     private func handleStickerTap(_ sticker: Sticker) {
         // 找到当前图片在列表中的索引
         if let index = viewModel.filteredStickers.firstIndex(where: { $0.id == sticker.id }) {
-            selectedStickerIndex = index
-            showingImageViewer = true
+            // 将索引包装为 IdentifiableViewerIndex，这会自动触发 fullScreenCover
+            viewerIndex = IdentifiableViewerIndex(index: index)
         }
     }
 
@@ -208,16 +235,18 @@ struct StickerLibraryView: View {
         editingTags = sticker.tags
         Task {
             allTags = await viewModel.getAllTags()
-            showingTagEditor = true
+            await MainActor.run {
+                showingTagEditor = true
+            }
         }
     }
 
     private func handleEditImage(_ sticker: Sticker) {
-        Task {
+        Task { @MainActor in
             if let image = await FileStorageManager.shared.loadImage(at: sticker.filePath) {
                 selectedSticker = sticker
-                editorImage = image
-                showingEditor = true
+                // 将 UIImage 包装为 IdentifiableImage，这会自动触发 fullScreenCover
+                editorImage = IdentifiableImage(image: image)
             }
         }
     }
@@ -255,15 +284,24 @@ struct StickerLibraryView: View {
     private func handleMenuAction(_ action: MenuAction, sticker: Sticker) {
         // 需要关闭查看器的操作
         if action == .delete || action == .editTags || action == .editImage {
-            showingImageViewer = false
+            // 如果是编辑操作，设置 pending action 以便在查看器关闭后执行
+            if action == .editTags {
+                pendingAction = .editTags(sticker)
+            } else if action == .editImage {
+                pendingAction = .editImage(sticker)
+            }
+            // 关闭查看器
+            viewerIndex = nil
+
+            // 删除操作直接执行
+            if action == .delete {
+                handleDelete(sticker)
+            }
+            return
         }
 
-        // 执行对应操作
+        // 其他操作直接执行，不关闭查看器
         switch action {
-        case .editTags:
-            handleEditTags(sticker)
-        case .editImage:
-            handleEditImage(sticker)
         case .togglePin:
             handleTogglePin(sticker)
         case .exportJPG:
@@ -272,8 +310,18 @@ struct StickerLibraryView: View {
             handleExport(sticker, format: "png")
         case .share:
             handleShare(sticker)
-        case .delete:
-            handleDelete(sticker)
+        default:
+            break
+        }
+    }
+
+    // 执行 pending action
+    private func executePendingAction(_ action: PendingAction) {
+        switch action {
+        case .editTags(let sticker):
+            handleEditTags(sticker)
+        case .editImage(let sticker):
+            handleEditImage(sticker)
         }
     }
 }
