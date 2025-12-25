@@ -10,7 +10,7 @@ import SwiftUI
 /// 侧边栏菜单项
 enum MenuSection: String, CaseIterable, Identifiable {
     case library = "表情包图库"
-    case editor = "编辑"
+    case create = "新建"
     case ai = "AI创作"
     case settings = "设置"
 
@@ -20,8 +20,8 @@ enum MenuSection: String, CaseIterable, Identifiable {
         switch self {
         case .library:
             return "photo.on.rectangle.angled"
-        case .editor:
-            return "pencil.and.outline"
+        case .create:
+            return "plus.square"
         case .ai:
             return "wand.and.stars"
         case .settings:

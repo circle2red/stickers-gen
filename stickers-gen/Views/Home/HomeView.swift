@@ -47,8 +47,8 @@ struct HomeView: View {
         switch selectedSection {
         case .library:
             StickerLibraryView()
-        case .editor:
-            EditorPlaceholderView()
+        case .create:
+            CreateNewStickerView()
         case .ai:
             AIGeneratorPlaceholderView()
         case .settings:
