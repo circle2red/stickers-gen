@@ -7,6 +7,7 @@
 
 import Foundation
 import UIKit
+import Zip
 
 /// 文件存储管理器
 actor FileStorageManager {
@@ -241,6 +242,57 @@ actor FileStorageManager {
 
         print("✅ Image exported: \(exportPath.lastPathComponent)")
         return exportPath
+    }
+
+    /// 批量导出表情包为ZIP
+    /// - Parameter stickers: 要导出的表情包数组
+    /// - Returns: ZIP文件URL
+    func exportStickersToZip(stickers: [Sticker]) async throws -> URL {
+        let tempDir = FileManager.default.temporaryDirectory
+        let timestamp = Date().unixTimestamp
+        let exportFolderName = "stickers_export_\(timestamp)"
+        let exportFolderPath = tempDir.appendingPathComponent(exportFolderName)
+
+        // 创建临时导出文件夹
+        try FileManager.default.createDirectory(at: exportFolderPath, withIntermediateDirectories: true)
+
+        // 导出所有图片到临时文件夹
+        var fileURLs: [URL] = []
+        for (index, sticker) in stickers.enumerated() {
+            guard let image = await loadImage(at: sticker.filePath) else {
+                continue
+            }
+
+            // 使用原始文件名，添加序号
+            let exportFilename = "\(index + 1)_\(sticker.filename.fileNameWithoutExtension).\(sticker.format)"
+            let exportPath = exportFolderPath.appendingPathComponent(exportFilename)
+
+            // 保存为JPG格式
+            guard let data = image.jpegData() else {
+                continue
+            }
+
+            try data.write(to: exportPath)
+            fileURLs.append(exportPath)
+        }
+
+        // 创建ZIP文件
+        let zipFilename = "stickers_\(timestamp).zip"
+        let zipPath = tempDir.appendingPathComponent(zipFilename)
+
+        // 删除已存在的ZIP文件
+        if FileManager.default.fileExists(atPath: zipPath.path) {
+            try FileManager.default.removeItem(at: zipPath)
+        }
+
+        // 压缩文件
+        try Zip.zipFiles(paths: fileURLs, zipFilePath: zipPath, password: nil, progress: nil)
+
+        // 清理临时文件夹
+        try? FileManager.default.removeItem(at: exportFolderPath)
+
+        print("✅ ZIP exported: \(zipFilename) with \(fileURLs.count) files")
+        return zipPath
     }
 
     // MARK: - Storage Info

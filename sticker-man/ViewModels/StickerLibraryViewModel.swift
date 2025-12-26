@@ -193,6 +193,62 @@ class StickerLibraryViewModel: ObservableObject {
         }
     }
 
+    /// 批量删除表情包
+    func batchDelete(stickerIds: [String]) async {
+        isLoading = true
+        defer { isLoading = false }
+
+        var failedCount = 0
+
+        for id in stickerIds {
+            guard let sticker = stickers.first(where: { $0.id == id }) else { continue }
+
+            do {
+                // 删除文件
+                try await fileStorageManager.deleteSticker(sticker)
+
+                // 删除数据库记录
+                try await databaseManager.deleteSticker(id: sticker.id)
+
+                // 从列表中移除
+                stickers.removeAll { $0.id == sticker.id }
+                filteredStickers.removeAll { $0.id == sticker.id }
+            } catch {
+                failedCount += 1
+                print("❌ Failed to delete sticker \(sticker.filename): \(error)")
+            }
+        }
+
+        if failedCount > 0 {
+            showErrorMessage("删除失败: \(failedCount) 个文件删除失败")
+        } else {
+            print("✅ Batch delete completed: \(stickerIds.count) stickers deleted")
+        }
+    }
+
+    /// 批量导出表情包为ZIP
+    func batchExportToZip(stickerIds: [String]) async -> URL? {
+        isLoading = true
+        defer { isLoading = false }
+
+        // 获取要导出的表情包
+        let stickersToExport = stickers.filter { stickerIds.contains($0.id) }
+
+        guard !stickersToExport.isEmpty else {
+            showErrorMessage("没有可导出的表情包")
+            return nil
+        }
+
+        do {
+            let zipURL = try await fileStorageManager.exportStickersToZip(stickers: stickersToExport)
+            print("✅ Batch export completed: \(stickersToExport.count) stickers exported to ZIP")
+            return zipURL
+        } catch {
+            showErrorMessage("导出ZIP失败: \(error.localizedDescription)")
+            return nil
+        }
+    }
+
     // MARK: - Error Handling
     /// 显示错误消息
     private func showErrorMessage(_ message: String) {

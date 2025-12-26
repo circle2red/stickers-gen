@@ -10,6 +10,8 @@ import SwiftUI
 /// 网格视图（3列）
 struct GridView: View {
     let stickers: [Sticker]
+    var isSelectionMode: Bool = false
+    var selectedStickers: Set<String> = []
     var onStickerTap: (Sticker) -> Void
     var onStickerLongPress: (Sticker) -> Void
 
@@ -19,15 +21,20 @@ struct GridView: View {
         ScrollView {
             LazyVGrid(columns: columns, spacing: 12) {
                 ForEach(stickers) { sticker in
-                    StickerItemView(sticker: sticker)
-                        .aspectRatio(1, contentMode: .fill)
-                        .onTapGesture {
-                            onStickerTap(sticker)
-                        }
-                        .onLongPressGesture {
-                            onStickerLongPress(sticker)
-                        }
-                        .id("\(sticker.id)-\(sticker.isPinned)-\(sticker.modifiedAt)")
+                    StickerItemView(
+                        sticker: sticker,
+                        displayMode: .grid,
+                        isSelectionMode: isSelectionMode,
+                        isSelected: selectedStickers.contains(sticker.id)
+                    )
+                    .aspectRatio(1, contentMode: .fill)
+                    .onTapGesture {
+                        onStickerTap(sticker)
+                    }
+                    .onLongPressGesture {
+                        onStickerLongPress(sticker)
+                    }
+                    .id("\(sticker.id)-\(sticker.isPinned)-\(sticker.modifiedAt)")
                 }
             }
             .padding(.horizontal)

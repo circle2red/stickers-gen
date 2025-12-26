@@ -25,7 +25,7 @@ enum PendingAction {
     case editImage(Sticker)
 }
 
-/// 表情包图库视图（从HomeView提取）
+/// 表情包图库视图
 struct StickerLibraryView: View {
     @StateObject private var viewModel = StickerLibraryViewModel()
 
@@ -38,6 +38,11 @@ struct StickerLibraryView: View {
     @State private var editingTags: [String] = []
     @State private var allTags: [String] = []
     @State private var editorImage: IdentifiableImage?
+
+    // Selection mode
+    @State private var isSelectionMode = false
+    @State private var selectedStickers: Set<String> = []
+    @State private var showingBatchDeleteConfirmation = false
 
     // Pending action - 用于在关闭一个 fullScreenCover 后执行另一个操作
     @State private var pendingAction: PendingAction?
@@ -71,6 +76,8 @@ struct StickerLibraryView: View {
                     if viewModel.viewMode == .grid {
                         GridView(
                             stickers: viewModel.filteredStickers,
+                            isSelectionMode: isSelectionMode,
+                            selectedStickers: selectedStickers,
                             onStickerTap: { sticker in
                                 handleStickerTap(sticker)
                             },
@@ -81,6 +88,8 @@ struct StickerLibraryView: View {
                     } else {
                         ListMenuView(
                             stickers: viewModel.filteredStickers,
+                            isSelectionMode: isSelectionMode,
+                            selectedStickers: selectedStickers,
                             onStickerTap: { sticker in
                                 handleStickerTap(sticker)
                             },
@@ -99,15 +108,38 @@ struct StickerLibraryView: View {
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .background(Color.black.opacity(0.2))
             }
+
+            // 批量操作工具栏
+            if isSelectionMode && !selectedStickers.isEmpty {
+                VStack {
+                    Spacer()
+                    selectionToolbar
+                }
+            }
         }
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
-                if !viewModel.isEmpty {
-                    Button(action: {
-                        viewModel.toggleViewMode()
-                    }) {
-                        Image(systemName: viewModel.viewMode == .grid ? "list.bullet" : "square.grid.2x2")
-                            .font(.title3)
+                HStack(spacing: 16) {
+                    if !viewModel.isEmpty && !isSelectionMode {
+                        Button(action: {
+                            viewModel.toggleViewMode()
+                        }) {
+                            Image(systemName: viewModel.viewMode == .grid ? "list.bullet" : "square.grid.2x2")
+                                .font(.title3)
+                        }
+                    }
+
+                    if !viewModel.isEmpty {
+                        Button(action: {
+                            toggleSelectionMode()
+                        }) {
+                            if isSelectionMode {
+                                Text("取消")
+                            } else {
+                                Image(systemName: "checkmark.circle")
+                                    .font(.title3)
+                            }
+                        }
                     }
                 }
             }
@@ -214,10 +246,29 @@ struct StickerLibraryView: View {
                 Button("取消", role: .cancel) {}
             }
         }
+        .alert("确认删除", isPresented: $showingBatchDeleteConfirmation) {
+            Button("取消", role: .cancel) {}
+            Button("删除", role: .destructive) {
+                performBatchDelete()
+            }
+        } message: {
+            Text("确定要删除选中的 \(selectedStickers.count) 个表情包吗？此操作无法撤销。")
+        }
     }
 
     // MARK: - Actions
     private func handleStickerTap(_ sticker: Sticker) {
+        // 多选模式下，点击切换选中状态
+        if isSelectionMode {
+            if selectedStickers.contains(sticker.id) {
+                selectedStickers.remove(sticker.id)
+            } else {
+                selectedStickers.insert(sticker.id)
+            }
+            return
+        }
+
+        // 非多选模式下，打开查看器
         // 找到当前图片在列表中的索引
         if let index = viewModel.filteredStickers.firstIndex(where: { $0.id == sticker.id }) {
             // 将索引包装为 IdentifiableViewerIndex，这会自动触发 fullScreenCover
@@ -323,6 +374,71 @@ struct StickerLibraryView: View {
         case .editImage(let sticker):
             handleEditImage(sticker)
         }
+    }
+
+    // MARK: - Selection Mode
+    private func toggleSelectionMode() {
+        isSelectionMode.toggle()
+        if !isSelectionMode {
+            selectedStickers.removeAll()
+        }
+    }
+
+    private func handleBatchDelete() {
+        showingBatchDeleteConfirmation = true
+    }
+
+    private func performBatchDelete() {
+        Task {
+            await viewModel.batchDelete(stickerIds: Array(selectedStickers))
+            selectedStickers.removeAll()
+            isSelectionMode = false
+        }
+    }
+
+    private func handleBatchExport() {
+        Task {
+            if let url = await viewModel.batchExportToZip(stickerIds: Array(selectedStickers)) {
+                shareItem = url
+                showingShareSheet = true
+            }
+        }
+    }
+
+    // MARK: - Selection Toolbar
+    private var selectionToolbar: some View {
+        HStack(spacing: 20) {
+            Button(action: handleBatchDelete) {
+                VStack(spacing: 4) {
+                    Image(systemName: "trash")
+                        .font(.title2)
+                    Text("删除")
+                        .font(.caption)
+                }
+                .foregroundColor(.red)
+            }
+
+            Spacer()
+
+            Text("\(selectedStickers.count) 已选")
+                .font(.headline)
+
+            Spacer()
+
+            Button(action: handleBatchExport) {
+                VStack(spacing: 4) {
+                    Image(systemName: "arrow.down.doc")
+                        .font(.title2)
+                    Text("导出ZIP")
+                        .font(.caption)
+                }
+                .foregroundColor(.blue)
+            }
+        }
+        .padding(.horizontal, 24)
+        .padding(.vertical, 16)
+        .background(Color(.systemBackground))
+        .shadow(color: Color.black.opacity(0.1), radius: 8, y: -2)
     }
 }
 
