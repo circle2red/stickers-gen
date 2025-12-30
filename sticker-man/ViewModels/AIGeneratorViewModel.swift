@@ -21,6 +21,9 @@ class AIGeneratorViewModel: ObservableObject {
     @Published var errorMessage: String?
     @Published var showSuccessAlert = false
     @Published var selectedPhotoItem: PhotosPickerItem?
+    @Published var showStickerPicker = false
+    @Published var availableStickers: [Sticker] = []
+    @Published var isLoadingStickers = false
 
     // MARK: - Services
     private let aiService = AIService.shared
@@ -123,6 +126,31 @@ class AIGeneratorViewModel: ObservableObject {
         } catch {
             showErrorMessage("加载图片失败: \(error.localizedDescription)")
         }
+    }
+
+    /// 加载所有表情包
+    func loadAvailableStickers() async {
+        isLoadingStickers = true
+        defer { isLoadingStickers = false }
+
+        do {
+            availableStickers = try await databaseManager.fetchAllStickers()
+            print("✅ Loaded \(availableStickers.count) stickers for selection")
+        } catch {
+            showErrorMessage("加载表情包失败: \(error.localizedDescription)")
+        }
+    }
+
+    /// 从表情包选择基础图片
+    func selectStickerAsBaseImage(_ sticker: Sticker) async {
+        guard let image = await fileStorageManager.loadImage(at: sticker.filePath) else {
+            showErrorMessage("加载表情包图片失败")
+            return
+        }
+
+        selectedImage = image
+        showStickerPicker = false
+        print("✅ Selected sticker as base image: \(sticker.filename)")
     }
 
     // MARK: - Error Handling

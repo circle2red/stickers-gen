@@ -65,7 +65,7 @@ actor FileStorageManager {
         }
 
         let thumbnailPath = URL.thumbnailsDirectory.appendingPathComponent("\(id)_thumb.jpg")
-        guard let thumbnailData = thumbnail.jpegData() else {
+        guard let thumbnailData = thumbnail.jpegData(compressionQuality: Constants.Storage.compressionQuality) else {
             throw StorageError.dataConversionFailed
         }
 
@@ -133,7 +133,7 @@ actor FileStorageManager {
         }
 
         let thumbnailPath = URL.thumbnailsDirectory.appendingPathComponent("\(originalSticker.id)_thumb.jpg")
-        guard let thumbnailData = thumbnail.jpegData() else {
+        guard let thumbnailData = thumbnail.jpegData(compressionQuality: Constants.Storage.compressionQuality) else {
             throw StorageError.dataConversionFailed
         }
 
@@ -217,7 +217,7 @@ actor FileStorageManager {
         // 根据格式导出
         switch format.lowercased() {
         case "jpg", "jpeg":
-            guard let data = image.jpegData() else {
+            guard let data = image.jpegData(compressionQuality: Constants.Storage.compressionQuality) else {
                 throw StorageError.dataConversionFailed
             }
             try data.write(to: exportPath)
@@ -231,7 +231,7 @@ actor FileStorageManager {
         case "gif":
             // GIF导出需要特殊处理，这里先简单导出为JPG
             // 后续在ImageExporter中实现完整的GIF导出
-            guard let data = image.jpegData() else {
+            guard let data = image.jpegData(compressionQuality: Constants.Storage.compressionQuality) else {
                 throw StorageError.dataConversionFailed
             }
             try data.write(to: exportPath)
@@ -268,7 +268,7 @@ actor FileStorageManager {
             let exportPath = exportFolderPath.appendingPathComponent(exportFilename)
 
             // 保存为JPG格式
-            guard let data = image.jpegData() else {
+            guard let data = image.jpegData(compressionQuality: Constants.Storage.compressionQuality) else {
                 continue
             }
 

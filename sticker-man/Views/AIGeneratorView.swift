@@ -70,6 +70,25 @@ struct AIGeneratorView: View {
                 await viewModel.loadSelectedImage()
             }
         }
+        .sheet(isPresented: $viewModel.showStickerPicker) {
+            NavigationStack {
+                stickerPickerView
+                    .navigationTitle("选择基础图片")
+                    .navigationBarTitleDisplayMode(.inline)
+                    .toolbar {
+                        ToolbarItem(placement: .navigationBarTrailing) {
+                            Button("取消") {
+                                viewModel.showStickerPicker = false
+                            }
+                        }
+                    }
+            }
+            .onAppear {
+                Task {
+                    await viewModel.loadAvailableStickers()
+                }
+            }
+        }
     }
 
     // MARK: - Header Section
@@ -134,30 +153,61 @@ struct AIGeneratorView: View {
                     )
             } else {
                 // 选择图片按钮
-                PhotosPicker(selection: $viewModel.selectedPhotoItem, matching: .images) {
-                    HStack {
-                        Image(systemName: "photo.on.rectangle.angled")
-                            .font(.title2)
+                VStack(spacing: 12) {
+                    PhotosPicker(selection: $viewModel.selectedPhotoItem, matching: .images) {
+                        HStack {
+                            Image(systemName: "photo.on.rectangle.angled")
+                                .font(.title2)
 
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text("选择图片")
-                                .font(.body)
-                                .fontWeight(.medium)
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("从相册选择")
+                                    .font(.body)
+                                    .fontWeight(.medium)
 
-                            Text("从相册中选择一张图片作为基础")
+                                Text("从系统相册中选择一张图片")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+
+                            Spacer()
+
+                            Image(systemName: "chevron.right")
                                 .font(.caption)
-                                .foregroundColor(.secondary)
+                                .foregroundColor(.gray)
                         }
-
-                        Spacer()
-
-                        Image(systemName: "chevron.right")
-                            .font(.caption)
-                            .foregroundColor(.gray)
+                        .padding()
+                        .background(Color(.systemGray6))
+                        .cornerRadius(12)
                     }
-                    .padding()
-                    .background(Color(.systemGray6))
-                    .cornerRadius(12)
+
+                    Button {
+                        viewModel.showStickerPicker = true
+                    } label: {
+                        HStack {
+                            Image(systemName: "square.grid.3x3")
+                                .font(.title2)
+
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("从图库选择")
+                                    .font(.body)
+                                    .fontWeight(.medium)
+
+                                Text("从已保存的表情包中选择")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+
+                            Spacer()
+
+                            Image(systemName: "chevron.right")
+                                .font(.caption)
+                                .foregroundColor(.gray)
+                        }
+                        .padding()
+                        .background(Color(.systemGray6))
+                        .cornerRadius(12)
+                    }
+                    .foregroundColor(.primary)
                 }
             }
 
@@ -278,6 +328,45 @@ struct AIGeneratorView: View {
             }
         }
         .padding(.top, 12)
+    }
+
+    // MARK: - Sticker Picker View
+    private var stickerPickerView: some View {
+        Group {
+            if viewModel.isLoadingStickers {
+                VStack(spacing: 16) {
+                    ProgressView()
+                    Text("加载中...")
+                        .foregroundColor(.secondary)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else if viewModel.availableStickers.isEmpty {
+                VStack(spacing: 16) {
+                    Image(systemName: "photo.on.rectangle.angled")
+                        .font(.system(size: 50))
+                        .foregroundColor(.gray)
+
+                    Text("图库中还没有表情包")
+                        .font(.headline)
+                        .foregroundColor(.secondary)
+
+                    Text("请先添加一些表情包")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else {
+                GridView(
+                    stickers: viewModel.availableStickers,
+                    onStickerTap: { sticker in
+                        Task {
+                            await viewModel.selectStickerAsBaseImage(sticker)
+                        }
+                    },
+                    onStickerLongPress: { _ in }
+                )
+            }
+        }
     }
 }
 

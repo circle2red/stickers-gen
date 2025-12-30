@@ -113,16 +113,6 @@ extension UIImage {
         draw(in: CGRect(origin: offset, size: scaledSize))
         return UIGraphicsGetImageFromCurrentImageContext()
     }
-
-    /// 获取JPEG数据
-    func jpegData(quality: CGFloat = Constants.Storage.compressionQuality) -> Data? {
-        return self.jpegData(compressionQuality: quality)
-    }
-
-    /// 获取PNG数据
-    func pngData() -> Data? {
-        return self.pngData()
-    }
 }
 
 // MARK: - URL Extensions
