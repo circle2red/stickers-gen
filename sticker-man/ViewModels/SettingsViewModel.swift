@@ -24,6 +24,7 @@ class SettingsViewModel: ObservableObject {
     // MARK: - Services
     private let fileStorageManager = FileStorageManager.shared
     private let databaseManager = DatabaseManager.shared
+    private let aiService = AIService.shared
 
     // MARK: - Initialization
     init() {
@@ -73,14 +74,16 @@ class SettingsViewModel: ObservableObject {
             return false
         }
 
-        // TODO: 在Phase 6实现实际的API测试
-        // 目前只做简单验证
         print("🔍 Testing AI connection...")
 
-        // 模拟网络请求
-        try? await Task.sleep(nanoseconds: 1_000_000_000)
-
-        return true
+        do {
+            let success = try await aiService.testConnection(config: aiConfig)
+            print("✅ AI connection test successful")
+            return success
+        } catch {
+            showErrorMessage("连接测试失败: \(error.localizedDescription)")
+            return false
+        }
     }
 
     // MARK: - Error Handling

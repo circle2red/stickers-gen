@@ -46,10 +46,10 @@ enum Constants {
 
     // MARK: - AI
     enum AI {
-        static let defaultEndpoint = "https://api.openai.com/v1/images/generations"
-        static let defaultModelName = "gemini-3-pro"
+        static let defaultEndpoint = "https://openrouter.ai/api/v1/chat/completions"
+        static let defaultModelName = "google/gemini-2.5-flash-image"
         static let defaultTemperature = 0.7
-        static let defaultMaxTokens = 1024
+        static let defaultMaxTokens = 2048
         static let timeoutSeconds = 30.0
         static let maxRetries = 2
     }

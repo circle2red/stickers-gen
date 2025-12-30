@@ -15,8 +15,6 @@ struct AIConfigDetailView: View {
     @State private var apiEndpoint: String = ""
     @State private var apiKey: String = ""
     @State private var modelName: String = ""
-    @State private var temperature: Double = 0.7
-    @State private var maxTokens: Int = 1024
 
     @State private var isTestingConnection = false
     @State private var showTestSuccess = false
@@ -51,52 +49,17 @@ struct AIConfigDetailView: View {
                 Text("请填写AI服务商提供的API信息")
             }
 
-            // 高级配置
-            Section {
-                VStack(alignment: .leading, spacing: 8) {
-                    HStack {
-                        Text("Temperature")
-                        Spacer()
-                        Text(String(format: "%.1f", temperature))
-                            .foregroundColor(.secondary)
-                    }
-
-                    Slider(value: $temperature, in: 0...2, step: 0.1)
-                        .onChange(of: temperature) { _, _ in
-                            hasChanges = true
-                        }
-                }
-
-                HStack {
-                    Text("Max Tokens")
-
-                    Spacer()
-
-                    TextField("", value: $maxTokens, format: .number)
-                        .keyboardType(.numberPad)
-                        .multilineTextAlignment(.trailing)
-                        .frame(width: 100)
-                        .onChange(of: maxTokens) { _, _ in
-                            hasChanges = true
-                        }
-                }
-            } header: {
-                Text("高级配置")
-            } footer: {
-                Text("Temperature控制生成的随机性，Max Tokens限制生成内容的长度")
-            }
-
-            // 预设配置
+            // 快速配置
             Section("快速配置") {
                 Button {
-                    loadGeminiPreset()
+                    loadOpenRouterPreset()
                 } label: {
                     HStack {
                         VStack(alignment: .leading, spacing: 4) {
-                            Text("Gemini 3 Pro")
+                            Text("OpenRouter")
                                 .foregroundColor(.primary)
 
-                            Text("Google的最新AI模型")
+                            Text("通过OpenRouter使用Google Gemini图像生成")
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                         }
@@ -110,14 +73,14 @@ struct AIConfigDetailView: View {
                 }
 
                 Button {
-                    loadOpenAIPreset()
+                    loadVercelPreset()
                 } label: {
                     HStack {
                         VStack(alignment: .leading, spacing: 4) {
-                            Text("OpenAI DALL-E")
+                            Text("Vercel AI Gateway")
                                 .foregroundColor(.primary)
 
-                            Text("OpenAI的图像生成模型")
+                            Text("通过Vercel AI网关访问AI服务")
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                         }
@@ -184,8 +147,6 @@ struct AIConfigDetailView: View {
         apiEndpoint = config.apiEndpoint
         apiKey = config.apiKey
         modelName = config.modelName
-        temperature = config.temperature
-        maxTokens = config.maxTokens
         hasChanges = false
     }
 
@@ -193,9 +154,7 @@ struct AIConfigDetailView: View {
         viewModel.aiConfig = AIConfig(
             apiEndpoint: apiEndpoint,
             apiKey: apiKey,
-            modelName: modelName,
-            temperature: temperature,
-            maxTokens: maxTokens
+            modelName: modelName
         )
         viewModel.saveAIConfig()
         hasChanges = false
@@ -218,19 +177,15 @@ struct AIConfigDetailView: View {
         }
     }
 
-    private func loadGeminiPreset() {
-        apiEndpoint = "https://generativelanguage.googleapis.com/v1beta/models"
-        modelName = "gemini-3-pro"
-        temperature = 0.7
-        maxTokens = 1024
+    private func loadOpenRouterPreset() {
+        apiEndpoint = "https://openrouter.ai/api/v1/chat/completions"
+        modelName = "google/gemini-2.5-flash-image"
         hasChanges = true
     }
 
-    private func loadOpenAIPreset() {
-        apiEndpoint = "https://api.openai.com/v1/images/generations"
-        modelName = "dall-e-3"
-        temperature = 0.7
-        maxTokens = 1024
+    private func loadVercelPreset() {
+        apiEndpoint = "https://ai-gateway.vercel.sh/v1/chat/completions"
+        modelName = "google/gemini-2.5-flash-image"
         hasChanges = true
     }
 }

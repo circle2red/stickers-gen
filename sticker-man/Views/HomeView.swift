@@ -50,7 +50,7 @@ struct HomeView: View {
         case .create:
             CreateNewStickerView()
         case .ai:
-            AIGeneratorPlaceholderView()
+            AIGeneratorView()
         case .settings:
             SettingsView()
         }

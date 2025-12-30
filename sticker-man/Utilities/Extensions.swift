@@ -118,6 +118,11 @@ extension UIImage {
     func jpegData(quality: CGFloat = Constants.Storage.compressionQuality) -> Data? {
         return self.jpegData(compressionQuality: quality)
     }
+
+    /// 获取PNG数据
+    func pngData() -> Data? {
+        return self.pngData()
+    }
 }
 
 // MARK: - URL Extensions
