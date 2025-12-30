@@ -146,6 +146,20 @@ actor DatabaseManager {
         return nil
     }
 
+    /// 检查文件名是否已存在（用于重命名时检测重名）
+    func filenameExists(_ filename: String, excludingId: String? = nil) async throws -> Bool {
+        guard let db = db else { throw DatabaseError.notInitialized }
+
+        var query = DatabaseSchema.stickers.filter(DatabaseSchema.StickersColumns.filename == filename)
+
+        // 如果提供了excludingId，排除该ID（用于重命名时排除自己）
+        if let excludingId = excludingId {
+            query = query.filter(DatabaseSchema.StickersColumns.id != excludingId)
+        }
+
+        return try db.pluck(query) != nil
+    }
+
     /// 根据标签搜索表情包
     func searchStickers(byTag tagName: String) async throws -> [Sticker] {
         guard let db = db else { throw DatabaseError.notInitialized }

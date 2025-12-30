@@ -181,6 +181,51 @@ class StickerLibraryViewModel: ObservableObject {
         }
     }
 
+    /// 重命名表情包
+    func renameSticker(_ sticker: Sticker, newName: String) async -> Bool {
+        // 检查新名称是否为空
+        let trimmedName = newName.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedName.isEmpty else {
+            showErrorMessage("名称不能为空")
+            return false
+        }
+
+        // 检查是否有变化
+        guard trimmedName != sticker.filename else {
+            return true // 名称没有变化，直接返回成功
+        }
+
+        // 检查是否重名
+        do {
+            let exists = try await databaseManager.filenameExists(trimmedName, excludingId: sticker.id)
+            if exists {
+                showErrorMessage("该名称已存在，请使用其他名称")
+                return false
+            }
+
+            // 更新表情包
+            var updatedSticker = sticker
+            updatedSticker.filename = trimmedName
+            updatedSticker.modifiedAt = Date().unixTimestamp
+
+            try await databaseManager.updateSticker(updatedSticker)
+
+            // 更新本地数据
+            if let index = stickers.firstIndex(where: { $0.id == sticker.id }) {
+                stickers[index] = updatedSticker
+            }
+            if let index = filteredStickers.firstIndex(where: { $0.id == sticker.id }) {
+                filteredStickers[index] = updatedSticker
+            }
+
+            print("✅ Sticker renamed: \(sticker.filename) -> \(trimmedName)")
+            return true
+        } catch {
+            showErrorMessage("重命名失败: \(error.localizedDescription)")
+            return false
+        }
+    }
+
     /// 导出表情包
     func exportSticker(_ sticker: Sticker, format: String) async -> URL? {
         do {

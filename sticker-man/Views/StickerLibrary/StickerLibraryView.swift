@@ -29,6 +29,7 @@ struct IdentifiableURL: Identifiable {
 enum PendingAction {
     case editTags(Sticker)
     case editImage(Sticker)
+    case rename(Sticker)
 }
 
 /// 表情包图库视图
@@ -44,6 +45,11 @@ struct StickerLibraryView: View {
     @State private var editingTags: [String] = []
     @State private var allTags: [String] = []
     @State private var editorImage: IdentifiableImage?
+
+    // Rename dialog
+    @State private var showingRenameDialog = false
+    @State private var renamingSticker: Sticker?
+    @State private var newStickerName: String = ""
 
     // Selection mode
     @State private var isSelectionMode = false
@@ -232,6 +238,27 @@ struct StickerLibraryView: View {
         } message: {
             Text("确定要删除选中的 \(selectedStickers.count) 个表情包吗？此操作无法撤销。")
         }
+        .alert("重命名", isPresented: $showingRenameDialog) {
+            TextField("新名称", text: $newStickerName)
+            Button("取消", role: .cancel) {
+                newStickerName = ""
+                renamingSticker = nil
+            }
+            Button("确定") {
+                performRename()
+            }
+        } message: {
+            if let sticker = renamingSticker {
+                let ext = (sticker.filename as NSString).pathExtension
+                if !ext.isEmpty {
+                    Text("请输入新的名称（扩展名 .\(ext) 将自动保留）")
+                } else {
+                    Text("请输入新的名称")
+                }
+            } else {
+                Text("请输入新的名称")
+            }
+        }
     }
 
     // MARK: - Actions
@@ -312,21 +339,70 @@ struct StickerLibraryView: View {
         }
     }
 
-    private func handleMenuAction(_ action: MenuAction, sticker: Sticker) {
-        // 需要关闭查看器的操作
-        if action == .delete || action == .editTags || action == .editImage {
-            // 如果是编辑操作，设置 pending action 以便在查看器关闭后执行
-            if action == .editTags {
-                pendingAction = .editTags(sticker)
-            } else if action == .editImage {
-                pendingAction = .editImage(sticker)
-            }
-            // 关闭查看器
-            viewerIndex = nil
+    private func handleRename(_ sticker: Sticker) {
+        renamingSticker = sticker
+        // 提取文件名（不包含扩展名）
+        let filename = (sticker.filename as NSString).deletingPathExtension
+        newStickerName = filename
+        showingRenameDialog = true
+    }
 
-            // 删除操作直接执行
-            if action == .delete {
-                handleDelete(sticker)
+    private func performRename() {
+        guard let sticker = renamingSticker else { return }
+
+        // 获取原始文件的扩展名
+        let fileExtension = (sticker.filename as NSString).pathExtension
+        // 组合新文件名和原扩展名
+        let newFilenameWithExtension = fileExtension.isEmpty ? newStickerName : "\(newStickerName).\(fileExtension)"
+
+        Task {
+            let success = await viewModel.renameSticker(sticker, newName: newFilenameWithExtension)
+            await MainActor.run {
+                if success {
+                    newStickerName = ""
+                    renamingSticker = nil
+                }
+            }
+        }
+    }
+
+    private func handleMenuAction(_ action: MenuAction, sticker: Sticker) {
+        // 检查是否在查看器中
+        let isInViewer = viewerIndex != nil
+
+        // 需要关闭查看器的操作
+        if action == .delete || action == .editTags || action == .editImage || action == .rename {
+            // 如果在查看器中，需要先关闭查看器
+            if isInViewer {
+                // 设置 pending action 以便在查看器关闭后执行
+                if action == .editTags {
+                    pendingAction = .editTags(sticker)
+                } else if action == .editImage {
+                    pendingAction = .editImage(sticker)
+                } else if action == .rename {
+                    pendingAction = .rename(sticker)
+                }
+                // 关闭查看器
+                viewerIndex = nil
+
+                // 删除操作直接执行
+                if action == .delete {
+                    handleDelete(sticker)
+                }
+            } else {
+                // 不在查看器中，直接执行操作
+                switch action {
+                case .editTags:
+                    handleEditTags(sticker)
+                case .editImage:
+                    handleEditImage(sticker)
+                case .rename:
+                    handleRename(sticker)
+                case .delete:
+                    handleDelete(sticker)
+                default:
+                    break
+                }
             }
             return
         }
@@ -353,6 +429,8 @@ struct StickerLibraryView: View {
             handleEditTags(sticker)
         case .editImage(let sticker):
             handleEditImage(sticker)
+        case .rename(let sticker):
+            handleRename(sticker)
         }
     }
 

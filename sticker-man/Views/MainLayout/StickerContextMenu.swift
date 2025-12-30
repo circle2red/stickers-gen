@@ -10,6 +10,7 @@ import SwiftUI
 enum MenuAction: Equatable {
     case editTags
     case editImage
+    case rename
     case togglePin
     case exportJPG
     case exportPNG
@@ -32,6 +33,10 @@ struct StickerContextMenu {
 
         Button("编辑图片") {
             onAction(.editImage)
+        }
+
+        Button("重命名") {
+            onAction(.rename)
         }
 
         Button(sticker.isPinned ? "取消置顶" : "置顶") {

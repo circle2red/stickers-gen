@@ -102,7 +102,7 @@
 					};
 				};
 			};
-			buildConfigurationList = D47C17CB2EF987A10053B03C /* Build configuration list for PBXProject "stickers-gen" */;
+			buildConfigurationList = D47C17CB2EF987A10053B03C /* Build configuration list for PBXProject "stickers-man" */;
 			developmentRegion = "zh-Hans";
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -324,7 +324,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		D47C17CB2EF987A10053B03C /* Build configuration list for PBXProject "stickers-gen" */ = {
+		D47C17CB2EF987A10053B03C /* Build configuration list for PBXProject "stickers-man" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				D47C17DB2EF987A20053B03C /* Debug */,
