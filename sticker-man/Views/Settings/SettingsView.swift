@@ -12,6 +12,7 @@ struct SettingsView: View {
     @StateObject private var viewModel = SettingsViewModel()
     @State private var showingImport = false
     @State private var showingStorageDetail = false
+    @State private var showingAboutAlert = false
 
     var body: some View {
         List {
@@ -98,7 +99,7 @@ struct SettingsView: View {
                 }
 
                 Button {
-                    // 关于页面
+                    showingAboutAlert = true
                 } label: {
                     Label("关于应用", systemImage: "info.circle")
                         .foregroundColor(.primary)
@@ -142,6 +143,11 @@ struct SettingsView: View {
         }
         .refreshable {
             await viewModel.loadStorageInfo()
+        }
+        .alert("关于应用", isPresented: $showingAboutAlert) {
+            Button("确定", role: .cancel) {}
+        } message: {
+            Text("2025年腾讯微信客户端菁英班大作业项目")
         }
     }
 }
