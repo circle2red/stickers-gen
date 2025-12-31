@@ -176,21 +176,7 @@ actor DatabaseManager {
         var stickers: [Sticker] = []
 
         for row in try db.prepare(query, ["%\(tagName)%"]) {
-            let sticker = Sticker(
-                id: row[0] as! String,
-                filename: row[1] as! String,
-                filePath: row[2] as! String,
-                fileSize: Int(row[3] as! Int64),
-                width: Int(row[4] as! Int64),
-                height: Int(row[5] as! Int64),
-                format: row[6] as! String,
-                createdAt: Int(row[7] as! Int64),
-                modifiedAt: Int(row[8] as! Int64),
-                isPinned: (row[9] as! Int64) == 1,
-                isFavorite: (row[10] as! Int64) == 1,
-                usageCount: Int(row[11] as! Int64),
-                tags: try await fetchTagsForSticker(id: row[0] as! String)
-            )
+            let sticker = try await createStickerFromRawRow(Array(row))
             stickers.append(sticker)
         }
 
@@ -215,21 +201,7 @@ actor DatabaseManager {
         let searchPattern = "%\(searchQuery)%"
 
         for row in try db.prepare(query, [searchPattern, searchPattern]) {
-            let sticker = Sticker(
-                id: row[0] as! String,
-                filename: row[1] as! String,
-                filePath: row[2] as! String,
-                fileSize: Int(row[3] as! Int64),
-                width: Int(row[4] as! Int64),
-                height: Int(row[5] as! Int64),
-                format: row[6] as! String,
-                createdAt: Int(row[7] as! Int64),
-                modifiedAt: Int(row[8] as! Int64),
-                isPinned: (row[9] as! Int64) == 1,
-                isFavorite: (row[10] as! Int64) == 1,
-                usageCount: Int(row[11] as! Int64),
-                tags: try await fetchTagsForSticker(id: row[0] as! String)
-            )
+            let sticker = try await createStickerFromRawRow(Array(row))
             stickers.append(sticker)
         }
 
@@ -373,6 +345,26 @@ actor DatabaseManager {
         try db.run(DatabaseSchema.tags.delete())
 
         print("[OK] All database data cleared")
+    }
+
+    // MARK: - Helper Methods
+    /// 从原始SQL查询结果创建Sticker对象
+    private func createStickerFromRawRow(_ row: [Binding?]) async throws -> Sticker {
+        return Sticker(
+            id: row[0] as! String,
+            filename: row[1] as! String,
+            filePath: row[2] as! String,
+            fileSize: Int(row[3] as! Int64),
+            width: Int(row[4] as! Int64),
+            height: Int(row[5] as! Int64),
+            format: row[6] as! String,
+            createdAt: Int(row[7] as! Int64),
+            modifiedAt: Int(row[8] as! Int64),
+            isPinned: (row[9] as! Int64) == 1,
+            isFavorite: (row[10] as! Int64) == 1,
+            usageCount: Int(row[11] as! Int64),
+            tags: try await fetchTagsForSticker(id: row[0] as! String)
+        )
     }
 }
 

@@ -24,16 +24,12 @@ class AIGeneratorViewModel: ObservableObject {
     @Published var showStickerPicker = false
     @Published var availableStickers: [Sticker] = []
     @Published var isLoadingStickers = false
+    @Published var aiConfig: AIConfig = AIConfig.load()
 
     // MARK: - Services
     private let aiService = AIService.shared
     private let fileStorageManager = FileStorageManager.shared
     private let databaseManager = DatabaseManager.shared
-
-    // MARK: - AI Config
-    var aiConfig: AIConfig {
-        return AIConfig.load()
-    }
 
     // MARK: - Computed Properties
     var canGenerate: Bool {
@@ -151,6 +147,11 @@ class AIGeneratorViewModel: ObservableObject {
         selectedImage = image
         showStickerPicker = false
         print("[OK] Selected sticker as base image: \(sticker.filename)")
+    }
+
+    /// 重新加载AI配置（从设置返回时调用）
+    func reloadAIConfig() {
+        aiConfig = AIConfig.load()
     }
 
     // MARK: - Error Handling

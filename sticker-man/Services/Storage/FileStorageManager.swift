@@ -104,61 +104,6 @@ actor FileStorageManager {
         return stickers
     }
 
-    // MARK: - Save Edited Image
-    /// 保存编辑后的图片
-    /// - Parameters:
-    ///   - image: 编辑后的图片
-    ///   - originalSticker: 原始表情包（用于更新）
-    /// - Returns: 更新后的Sticker模型
-    func saveEditedImage(_ image: UIImage, originalSticker: Sticker) async throws -> Sticker {
-        // 生成新文件名
-        let timestamp = Date().unixTimestamp
-        let newFilename = "edit_\(timestamp).jpg"
-        let filePath = URL.stickersDirectory.appendingPathComponent(newFilename)
-
-        // 压缩图片
-        guard let compressed = image.compressed() else {
-            throw StorageError.compressionFailed
-        }
-
-        let compressedImage = compressed.image
-        let imageData = compressed.data
-
-        // 保存压缩后的数据
-        try imageData.write(to: filePath)
-
-        // 生成并保存缩略图
-        guard let thumbnail = compressedImage.thumbnail() else {
-            throw StorageError.thumbnailGenerationFailed
-        }
-
-        let thumbnailPath = URL.thumbnailsDirectory.appendingPathComponent("\(originalSticker.id)_thumb.jpg")
-        guard let thumbnailData = thumbnail.jpegData(compressionQuality: Constants.Storage.compressionQuality) else {
-            throw StorageError.dataConversionFailed
-        }
-
-        try thumbnailData.write(to: thumbnailPath)
-
-        // 删除旧图片（保留缩略图，因为会被覆盖）
-        try? deleteImageFile(at: originalSticker.filePath)
-
-        // 获取图片尺寸和文件大小
-        let imageSize = compressedImage.size
-        let fileSize = imageData.count
-
-        // 更新Sticker模型
-        var updatedSticker = originalSticker
-        updatedSticker.filePath = newFilename
-        updatedSticker.fileSize = fileSize
-        updatedSticker.width = Int(imageSize.width)
-        updatedSticker.height = Int(imageSize.height)
-        updatedSticker.format = "jpg"
-        updatedSticker.modifiedAt = timestamp
-
-        print("[OK] Edited image saved: \(newFilename) (\(fileSize) bytes)")
-        return updatedSticker
-    }
-
     // MARK: - Delete
     /// 删除表情包文件
     func deleteSticker(_ sticker: Sticker) async throws {

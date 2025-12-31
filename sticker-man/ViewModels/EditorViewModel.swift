@@ -391,6 +391,4 @@ struct TextOverlay: Identifiable {
     var position: CGPoint
     var fontSize: CGFloat
     var color: Color
-    var rotation: Double = 0
-    var scale: CGFloat = 1.0
 }

@@ -142,12 +142,7 @@ class StickerLibraryViewModel: ObservableObject {
             try await databaseManager.updateSticker(updatedSticker)
 
             // 更新本地数据
-            if let index = stickers.firstIndex(where: { $0.id == sticker.id }) {
-                stickers[index] = updatedSticker
-            }
-            if let index = filteredStickers.firstIndex(where: { $0.id == sticker.id }) {
-                filteredStickers[index] = updatedSticker
-            }
+            updateLocalStickerData(updatedSticker)
 
             // 重新排序（置顶的在前面）
             await loadStickers()
@@ -168,12 +163,7 @@ class StickerLibraryViewModel: ObservableObject {
             try await databaseManager.updateSticker(updatedSticker)
 
             // 更新本地数据
-            if let index = stickers.firstIndex(where: { $0.id == sticker.id }) {
-                stickers[index] = updatedSticker
-            }
-            if let index = filteredStickers.firstIndex(where: { $0.id == sticker.id }) {
-                filteredStickers[index] = updatedSticker
-            }
+            updateLocalStickerData(updatedSticker)
 
             print("[OK] Sticker tags updated: \(tags.joined(separator: ", "))")
         } catch {
@@ -211,12 +201,7 @@ class StickerLibraryViewModel: ObservableObject {
             try await databaseManager.updateSticker(updatedSticker)
 
             // 更新本地数据
-            if let index = stickers.firstIndex(where: { $0.id == sticker.id }) {
-                stickers[index] = updatedSticker
-            }
-            if let index = filteredStickers.firstIndex(where: { $0.id == sticker.id }) {
-                filteredStickers[index] = updatedSticker
-            }
+            updateLocalStickerData(updatedSticker)
 
             print("[OK] Sticker renamed: \(sticker.filename) -> \(trimmedName)")
             return true
@@ -312,6 +297,16 @@ class StickerLibraryViewModel: ObservableObject {
     /// 检查是否为空状态
     var isEmpty: Bool {
         return stickers.isEmpty
+    }
+
+    /// 更新本地表情包数据
+    private func updateLocalStickerData(_ updatedSticker: Sticker) {
+        if let index = stickers.firstIndex(where: { $0.id == updatedSticker.id }) {
+            stickers[index] = updatedSticker
+        }
+        if let index = filteredStickers.firstIndex(where: { $0.id == updatedSticker.id }) {
+            filteredStickers[index] = updatedSticker
+        }
     }
 
     /// 获取所有标签（用于标签输入提示）

@@ -23,7 +23,7 @@ struct EmptyStateView: View {
                 .font(.title2)
                 .fontWeight(.semibold)
 
-            Text("点击右上角按钮导入图片")
+            Text("点击下方按钮或在设置中导入图片")
                 .font(.body)
                 .foregroundColor(.secondary)
 
