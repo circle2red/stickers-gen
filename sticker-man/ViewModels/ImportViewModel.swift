@@ -96,12 +96,19 @@ class ImportViewModel: ObservableObject {
         var stickers: [Sticker] = []
 
         for url in urls {
-            // 开始访问安全作用域资源
-            guard url.startAccessingSecurityScopedResource() else {
-                print("[WARNING] Failed to access security scoped resource: \(url.lastPathComponent)")
-                continue
+            // 尝试访问安全作用域资源
+            let didStartAccessing = url.startAccessingSecurityScopedResource()
+            if didStartAccessing {
+                print("[INFO] Started accessing security scoped resource: \(url.lastPathComponent)")
+            } else {
+                print("[INFO] URL does not require security scoped access: \(url.lastPathComponent)")
             }
-            defer { url.stopAccessingSecurityScopedResource() }
+
+            defer {
+                if didStartAccessing {
+                    url.stopAccessingSecurityScopedResource()
+                }
+            }
 
             do {
                 let filename = url.lastPathComponent
@@ -168,24 +175,57 @@ class ImportViewModel: ObservableObject {
     /// 导入ZIP文件
     private func importZipFile(_ url: URL) async throws -> [Sticker] {
         currentFileName = url.lastPathComponent
+        print("[INFO] Starting to import ZIP file: \(url.lastPathComponent)")
+        print("[INFO] ZIP URL path: \(url.path)")
 
         // 创建临时目录
         let tempDir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
+        print("[INFO] Created temp directory: \(tempDir.path)")
+
         defer {
             try? FileManager.default.removeItem(at: tempDir)
         }
 
-        // 解压ZIP
+        // 先将zip文件复制到临时目录（避免安全作用域资源访问问题）
+        let tempZipURL = tempDir.appendingPathComponent(url.lastPathComponent)
+
         do {
-            try await unzipFile(at: url, to: tempDir)
+            // 使用 Data 直接读取文件内容，然后写入临时目录
+            // 这种方法更可靠，可以避免文件系统权限问题
+            print("[INFO] Reading ZIP file data...")
+            let zipData = try Data(contentsOf: url)
+            print("[INFO] ZIP file size: \(zipData.count) bytes")
+
+            if zipData.isEmpty {
+                print("[ERROR] ZIP file is empty")
+                throw ImportError.invalidFile
+            }
+
+            print("[INFO] Writing ZIP data to temp directory...")
+            try zipData.write(to: tempZipURL)
+            print("[OK] Copied ZIP to temp directory: \(tempZipURL.path)")
         } catch {
-            print("[ERROR] Failed to unzip file: \(error)")
+            print("[ERROR] Failed to copy ZIP file: \(error.localizedDescription)")
+            print("[ERROR] Error details: \(error)")
+            throw ImportError.invalidFile
+        }
+
+        // 解压ZIP（从临时目录中的副本解压）
+        let unzipDestination = tempDir.appendingPathComponent("unzipped")
+        try FileManager.default.createDirectory(at: unzipDestination, withIntermediateDirectories: true)
+        print("[INFO] Created unzip destination: \(unzipDestination.path)")
+
+        do {
+            try await unzipFile(at: tempZipURL, to: unzipDestination)
+        } catch {
+            print("[ERROR] Failed to unzip file: \(error.localizedDescription)")
+            print("[ERROR] Error details: \(error)")
             throw ImportError.unzipFailed
         }
 
         // 查找所有图片文件
-        let imageURLs = try findImageFiles(in: tempDir)
+        let imageURLs = try findImageFiles(in: unzipDestination)
 
         // 检查是否找到图片
         if imageURLs.isEmpty {
