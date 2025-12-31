@@ -12,9 +12,11 @@ import PencilKit
 struct EditorView: View {
     @Environment(\.dismiss) private var dismiss
     @StateObject private var viewModel: EditorViewModel
+    let onSaveComplete: (() -> Void)?
 
-    init(image: UIImage, sticker: Sticker? = nil) {
+    init(image: UIImage, sticker: Sticker? = nil, onSaveComplete: (() -> Void)? = nil) {
         _viewModel = StateObject(wrappedValue: EditorViewModel(image: image, sticker: sticker))
+        self.onSaveComplete = onSaveComplete
     }
 
     var body: some View {
@@ -47,6 +49,7 @@ struct EditorView: View {
                             let success = await viewModel.save()
                             if success {
                                 dismiss()
+                                onSaveComplete?()
                             }
                         }
                     }

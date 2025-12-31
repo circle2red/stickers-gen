@@ -48,7 +48,7 @@ struct HomeView: View {
         case .library:
             StickerLibraryView()
         case .create:
-            CreateNewStickerView()
+            CreateNewStickerView(selectedSection: $selectedSection)
         case .ai:
             AIGeneratorView()
         case .settings:

@@ -10,6 +10,7 @@ import SwiftUI
 
 /// 新建表情包视图
 struct CreateNewStickerView: View {
+    @Binding var selectedSection: MenuSection
     @State private var selectedSize: CanvasSize = .square512
     @State private var customWidth: String = "512"
     @State private var customHeight: String = "512"
@@ -105,7 +106,10 @@ struct CreateNewStickerView: View {
             .padding(.bottom, 30)
         }
         .fullScreenCover(item: $editorImage) { identifiableImage in
-            EditorView(image: identifiableImage.image)
+            EditorView(image: identifiableImage.image, onSaveComplete: {
+                // 保存完成后，切换回首页（library section）
+                selectedSection = .library
+            })
         }
     }
 
@@ -197,5 +201,5 @@ struct SizeButton: View {
 }
 
 #Preview {
-    CreateNewStickerView()
+    CreateNewStickerView(selectedSection: .constant(.create))
 }
