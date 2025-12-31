@@ -21,6 +21,8 @@ class ImportViewModel: ObservableObject {
     @Published var currentFileName = ""
     @Published var showError = false
     @Published var errorMessage: String?
+    @Published var showGifWarning = false
+    @Published var hasGifFiles = false
 
     // MARK: - Services
     private let databaseManager = DatabaseManager.shared
@@ -32,6 +34,7 @@ class ImportViewModel: ObservableObject {
         isImporting = true
         totalCount = items.count
         importedCount = 0
+        hasGifFiles = false
         defer { isImporting = false }
 
         var stickers: [Sticker] = []
@@ -43,6 +46,11 @@ class ImportViewModel: ObservableObject {
                       let image = UIImage(data: data) else {
                     print("⚠️ Failed to load image from PhotosPicker")
                     continue
+                }
+
+                // 检测GIF文件
+                if isGifData(data) {
+                    hasGifFiles = true
                 }
 
                 // 生成文件名
@@ -69,6 +77,11 @@ class ImportViewModel: ObservableObject {
                 showErrorMessage("数据库保存失败: \(error.localizedDescription)")
             }
         }
+
+        // 如果检测到GIF文件，显示警告
+        if hasGifFiles {
+            showGifWarning = true
+        }
     }
 
     // MARK: - Document Picker
@@ -77,6 +90,7 @@ class ImportViewModel: ObservableObject {
         isImporting = true
         totalCount = urls.count
         importedCount = 0
+        hasGifFiles = false
         defer { isImporting = false }
 
         var stickers: [Sticker] = []
@@ -107,13 +121,21 @@ class ImportViewModel: ObservableObject {
                         showErrorMessage("ZIP导入失败: \(error.localizedDescription)")
                     }
                 } else if ["jpg", "jpeg", "png", "gif"].contains(fileExtension) {
+                    // 检测GIF文件
+                    if fileExtension == "gif" {
+                        hasGifFiles = true
+                    }
+
                     // 图片文件
                     guard let image = UIImage(contentsOfFile: url.path) else {
                         print("⚠️ Failed to load image: \(filename)")
                         continue
                     }
 
-                    let sticker = try await fileStorageManager.saveImage(image, filename: filename)
+                    // 生成唯一的文件名
+                    let uniqueFilename = await makeUniqueFilename(filename)
+
+                    let sticker = try await fileStorageManager.saveImage(image, filename: uniqueFilename)
                     stickers.append(sticker)
 
                     importedCount += 1
@@ -134,6 +156,11 @@ class ImportViewModel: ObservableObject {
             } catch {
                 showErrorMessage("数据库保存失败: \(error.localizedDescription)")
             }
+        }
+
+        // 如果检测到GIF文件，显示警告
+        if hasGifFiles {
+            showGifWarning = true
         }
     }
 
@@ -172,6 +199,11 @@ class ImportViewModel: ObservableObject {
         var stickers: [Sticker] = []
 
         for imageURL in imageURLs {
+            // 检测GIF文件
+            if imageURL.pathExtension.lowercased() == "gif" {
+                hasGifFiles = true
+            }
+
             guard let image = UIImage(contentsOfFile: imageURL.path) else {
                 print("⚠️ Failed to load image: \(imageURL.lastPathComponent)")
                 continue
@@ -180,7 +212,10 @@ class ImportViewModel: ObservableObject {
             let filename = imageURL.lastPathComponent
             currentFileName = filename
 
-            let sticker = try await fileStorageManager.saveImage(image, filename: filename)
+            // 生成唯一的文件名
+            let uniqueFilename = await makeUniqueFilename(filename)
+
+            let sticker = try await fileStorageManager.saveImage(image, filename: uniqueFilename)
             stickers.append(sticker)
 
             importedCount += 1
@@ -227,6 +262,68 @@ class ImportViewModel: ObservableObject {
         showError = false
     }
 
+    func clearGifWarning() {
+        showGifWarning = false
+        hasGifFiles = false
+    }
+
+    // MARK: - Helpers
+    /// 检测数据是否为GIF格式
+    private func isGifData(_ data: Data) -> Bool {
+        guard data.count >= 6 else { return false }
+
+        // GIF文件的magic number: "GIF87a" or "GIF89a"
+        let gifHeader = [UInt8](data.prefix(6))
+        return gifHeader[0] == 0x47 && // 'G'
+               gifHeader[1] == 0x49 && // 'I'
+               gifHeader[2] == 0x46    // 'F'
+    }
+
+    /// 生成唯一的文件名（如果文件名已存在，添加时间戳后缀）
+    private func makeUniqueFilename(_ originalFilename: String) async -> String {
+        let nameWithoutExt = (originalFilename as NSString).deletingPathExtension
+        let ext = (originalFilename as NSString).pathExtension
+
+        // 首先检查原始文件名是否存在
+        do {
+            let exists = try await databaseManager.filenameExists(originalFilename)
+            if !exists {
+                return originalFilename
+            }
+
+            // 文件名已存在，尝试添加时间戳
+            let timestamp = Date().unixTimestamp
+            let filenameWithTimestamp: String
+            if ext.isEmpty {
+                filenameWithTimestamp = "\(nameWithoutExt)_\(timestamp)"
+            } else {
+                filenameWithTimestamp = "\(nameWithoutExt)_\(timestamp).\(ext)"
+            }
+
+            let existsWithTimestamp = try await databaseManager.filenameExists(filenameWithTimestamp)
+            if !existsWithTimestamp {
+                return filenameWithTimestamp
+            }
+
+            // 时间戳也存在，使用UUID
+            let uniqueId = UUID().uuidString.prefix(8)
+            if ext.isEmpty {
+                return "\(nameWithoutExt)_\(uniqueId)"
+            } else {
+                return "\(nameWithoutExt)_\(uniqueId).\(ext)"
+            }
+        } catch {
+            print("⚠️ Failed to check filename existence: \(error)")
+            // 如果检查失败，直接使用带时间戳的文件名
+            let timestamp = Date().unixTimestamp
+            if ext.isEmpty {
+                return "\(nameWithoutExt)_\(timestamp)"
+            } else {
+                return "\(nameWithoutExt)_\(timestamp).\(ext)"
+            }
+        }
+    }
+
     // MARK: - Reset
     func reset() {
         isImporting = false
@@ -234,6 +331,8 @@ class ImportViewModel: ObservableObject {
         importedCount = 0
         totalCount = 0
         currentFileName = ""
+        hasGifFiles = false
+        showGifWarning = false
     }
 }
 

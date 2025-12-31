@@ -54,17 +54,30 @@ struct ImportView: View {
                     Text(errorMessage)
                 }
             }
+            .alert("GIF提示", isPresented: $viewModel.showGifWarning) {
+                Button("知道了", role: .cancel) {
+                    viewModel.clearGifWarning()
+                }
+            } message: {
+                Text("检测到GIF文件。目前只支持静态表情，GIF将被转换为静态图片。")
+            }
             .onChange(of: selectedPhotoItems) { oldValue, newValue in
                 if !newValue.isEmpty {
                     Task {
                         await viewModel.importPhotos(newValue)
                         selectedPhotoItems = []
 
-                        // 导入完成后关闭
-                        if !viewModel.showError {
+                        // 导入完成后，如果没有错误且没有GIF警告，则关闭
+                        if !viewModel.showError && !viewModel.showGifWarning {
                             dismiss()
                         }
                     }
+                }
+            }
+            .onChange(of: viewModel.showGifWarning) { oldValue, newValue in
+                // GIF警告弹窗关闭后，如果不在导入中且没有错误，则关闭视图
+                if oldValue == true && newValue == false && !viewModel.isImporting && !viewModel.showError {
+                    dismiss()
                 }
             }
             .sheet(isPresented: $showingDocumentPicker) {
@@ -72,8 +85,8 @@ struct ImportView: View {
                     Task {
                         await viewModel.importDocuments(urls)
 
-                        // 导入完成后关闭
-                        if !viewModel.showError {
+                        // 导入完成后，如果没有错误且没有GIF警告，则关闭
+                        if !viewModel.showError && !viewModel.showGifWarning {
                             dismiss()
                         }
                     }
@@ -108,13 +121,12 @@ struct ImportView: View {
                 // 从相册导入
                 PhotosPicker(
                     selection: $selectedPhotoItems,
-                    maxSelectionCount: 50,
                     matching: .images
                 ) {
                     ImportOptionButton(
                         icon: "photo.on.rectangle",
                         title: "从相册导入",
-                        subtitle: "支持多选，最多50张"
+                        subtitle: "支持批量选择图片"
                     )
                 }
 

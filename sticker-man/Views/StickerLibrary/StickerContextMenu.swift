@@ -71,7 +71,7 @@ struct StickerContextMenu {
             onAction(.exportPNG)
         }
 
-        Button("导出为 GIF") {
+        Button("导出为 GIF（仅支持静态）") {
             onAction(.exportGIF)
         }
 
