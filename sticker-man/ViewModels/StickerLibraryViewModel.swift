@@ -64,7 +64,7 @@ class StickerLibraryViewModel: ObservableObject {
         do {
             stickers = try await databaseManager.fetchAllStickers()
             filteredStickers = stickers
-            print("✅ Loaded \(stickers.count) stickers")
+            print("[OK] Loaded \(stickers.count) stickers")
         } catch {
             showErrorMessage("加载表情包失败: \(error.localizedDescription)")
         }
@@ -89,7 +89,7 @@ class StickerLibraryViewModel: ObservableObject {
         do {
             searchSuggestions = try await databaseManager.searchTags(query: query)
         } catch {
-            print("❌ Failed to fetch search suggestions: \(error)")
+            print("[ERROR] Failed to fetch search suggestions: \(error)")
         }
 
         // 按文件名或标签搜索表情包
@@ -127,7 +127,7 @@ class StickerLibraryViewModel: ObservableObject {
             stickers.removeAll { $0.id == sticker.id }
             filteredStickers.removeAll { $0.id == sticker.id }
 
-            print("✅ Sticker deleted: \(sticker.filename)")
+            print("[OK] Sticker deleted: \(sticker.filename)")
         } catch {
             showErrorMessage("删除失败: \(error.localizedDescription)")
         }
@@ -153,7 +153,7 @@ class StickerLibraryViewModel: ObservableObject {
             await loadStickers()
             await performSearch(searchText)
 
-            print("✅ Sticker pin toggled: \(sticker.filename)")
+            print("[OK] Sticker pin toggled: \(sticker.filename)")
         } catch {
             showErrorMessage("操作失败: \(error.localizedDescription)")
         }
@@ -175,7 +175,7 @@ class StickerLibraryViewModel: ObservableObject {
                 filteredStickers[index] = updatedSticker
             }
 
-            print("✅ Sticker tags updated: \(tags.joined(separator: ", "))")
+            print("[OK] Sticker tags updated: \(tags.joined(separator: ", "))")
         } catch {
             showErrorMessage("标签更新失败: \(error.localizedDescription)")
         }
@@ -218,7 +218,7 @@ class StickerLibraryViewModel: ObservableObject {
                 filteredStickers[index] = updatedSticker
             }
 
-            print("✅ Sticker renamed: \(sticker.filename) -> \(trimmedName)")
+            print("[OK] Sticker renamed: \(sticker.filename) -> \(trimmedName)")
             return true
         } catch {
             showErrorMessage("重命名失败: \(error.localizedDescription)")
@@ -230,7 +230,7 @@ class StickerLibraryViewModel: ObservableObject {
     func exportSticker(_ sticker: Sticker, format: String) async -> URL? {
         do {
             let exportURL = try await fileStorageManager.exportImage(sticker: sticker, format: format)
-            print("✅ Sticker exported: \(exportURL.lastPathComponent)")
+            print("[OK] Sticker exported: \(exportURL.lastPathComponent)")
             return exportURL
         } catch {
             showErrorMessage("导出失败: \(error.localizedDescription)")
@@ -260,14 +260,14 @@ class StickerLibraryViewModel: ObservableObject {
                 filteredStickers.removeAll { $0.id == sticker.id }
             } catch {
                 failedCount += 1
-                print("❌ Failed to delete sticker \(sticker.filename): \(error)")
+                print("[ERROR] Failed to delete sticker \(sticker.filename): \(error)")
             }
         }
 
         if failedCount > 0 {
             showErrorMessage("删除失败: \(failedCount) 个文件删除失败")
         } else {
-            print("✅ Batch delete completed: \(stickerIds.count) stickers deleted")
+            print("[OK] Batch delete completed: \(stickerIds.count) stickers deleted")
         }
     }
 
@@ -286,7 +286,7 @@ class StickerLibraryViewModel: ObservableObject {
 
         do {
             let zipURL = try await fileStorageManager.exportStickersToZip(stickers: stickersToExport)
-            print("✅ Batch export completed: \(stickersToExport.count) stickers exported to ZIP")
+            print("[OK] Batch export completed: \(stickersToExport.count) stickers exported to ZIP")
             return zipURL
         } catch {
             showErrorMessage("导出ZIP失败: \(error.localizedDescription)")
@@ -299,7 +299,7 @@ class StickerLibraryViewModel: ObservableObject {
     private func showErrorMessage(_ message: String) {
         errorMessage = message
         showError = true
-        print("❌ \(message)")
+        print("[ERROR] \(message)")
     }
 
     /// 清除错误
@@ -320,7 +320,7 @@ class StickerLibraryViewModel: ObservableObject {
             let tags = try await databaseManager.fetchAllTags()
             return tags.map { $0.name }
         } catch {
-            print("❌ Failed to fetch tags: \(error)")
+            print("[ERROR] Failed to fetch tags: \(error)")
             return []
         }
     }

@@ -58,7 +58,7 @@ class SettingsViewModel: ObservableObject {
             // 重新加载存储信息
             await loadStorageInfo()
 
-            print("✅ All data cleared successfully")
+            print("[OK] All data cleared successfully")
         } catch {
             showErrorMessage("清除失败: \(error.localizedDescription)")
         }
@@ -68,7 +68,7 @@ class SettingsViewModel: ObservableObject {
     /// 保存AI配置
     func saveAIConfig() {
         aiConfig.save()
-        print("✅ AI config saved")
+        print("[OK] AI config saved")
     }
 
     /// 测试AI连接
@@ -78,11 +78,11 @@ class SettingsViewModel: ObservableObject {
             return false
         }
 
-        print("🔍 Testing AI connection...")
+        print("[DEBUG] Testing AI connection...")
 
         do {
             let success = try await aiService.testConnection(config: aiConfig)
-            print("✅ AI connection test successful")
+            print("[OK] AI connection test successful")
             return success
         } catch {
             showErrorMessage("连接测试失败: \(error.localizedDescription)")
@@ -94,7 +94,7 @@ class SettingsViewModel: ObservableObject {
     private func showErrorMessage(_ message: String) {
         errorMessage = message
         showError = true
-        print("❌ \(message)")
+        print("[ERROR] \(message)")
     }
 
     func clearError() {

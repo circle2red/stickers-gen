@@ -41,9 +41,9 @@ actor DatabaseManager {
                 try DatabaseSchema.createTables(in: db)
             }
 
-            print("✅ Database initialized at: \(dbPath)")
+            print("[OK] Database initialized at: \(dbPath)")
         } catch {
-            print("❌ Database initialization failed: \(error)")
+            print("[ERROR] Database initialization failed: \(error)")
         }
     }
 
@@ -372,7 +372,7 @@ actor DatabaseManager {
         try db.run(DatabaseSchema.stickers.delete())
         try db.run(DatabaseSchema.tags.delete())
 
-        print("✅ All database data cleared")
+        print("[OK] All database data cleared")
     }
 }
 

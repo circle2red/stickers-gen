@@ -27,9 +27,9 @@ actor FileStorageManager {
             try fileManager.ensureDirectoryExists(at: URL.appDirectory)
             try fileManager.ensureDirectoryExists(at: URL.stickersDirectory)
             try fileManager.ensureDirectoryExists(at: URL.thumbnailsDirectory)
-            print("✅ Storage directories created")
+            print("[OK] Storage directories created")
         } catch {
-            print("❌ Failed to create directories: \(error)")
+            print("[ERROR] Failed to create directories: \(error)")
         }
     }
 
@@ -88,7 +88,7 @@ actor FileStorageManager {
             modifiedAt: Date().unixTimestamp
         )
 
-        print("✅ Image saved: \(newFilename) (\(fileSize) bytes)")
+        print("[OK] Image saved: \(newFilename) (\(fileSize) bytes)")
         return sticker
     }
 
@@ -155,7 +155,7 @@ actor FileStorageManager {
         updatedSticker.format = "jpg"
         updatedSticker.modifiedAt = timestamp
 
-        print("✅ Edited image saved: \(newFilename) (\(fileSize) bytes)")
+        print("[OK] Edited image saved: \(newFilename) (\(fileSize) bytes)")
         return updatedSticker
     }
 
@@ -169,7 +169,7 @@ actor FileStorageManager {
         let thumbnailPath = URL.thumbnailsDirectory.appendingPathComponent("\(sticker.id)_thumb.jpg")
         try? FileManager.default.removeItem(at: thumbnailPath)
 
-        print("✅ Sticker deleted: \(sticker.filePath)")
+        print("[OK] Sticker deleted: \(sticker.filePath)")
     }
 
     /// 删除图片文件
@@ -240,7 +240,7 @@ actor FileStorageManager {
             throw StorageError.unsupportedFormat
         }
 
-        print("✅ Image exported: \(exportPath.lastPathComponent)")
+        print("[OK] Image exported: \(exportPath.lastPathComponent)")
         return exportPath
     }
 
@@ -291,7 +291,7 @@ actor FileStorageManager {
         // 清理临时文件夹
         try? FileManager.default.removeItem(at: exportFolderPath)
 
-        print("✅ ZIP exported: \(zipFilename) with \(fileURLs.count) files")
+        print("[OK] ZIP exported: \(zipFilename) with \(fileURLs.count) files")
         return zipPath
     }
 
@@ -341,7 +341,7 @@ actor FileStorageManager {
         // 重新创建目录
         await setupDirectories()
 
-        print("✅ All cache cleared")
+        print("[OK] All cache cleared")
     }
 }
 

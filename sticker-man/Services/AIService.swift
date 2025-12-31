@@ -163,7 +163,7 @@ actor AIService {
         guard (200...299).contains(httpResponse.statusCode) else {
             // 尝试解析错误消息
             if let errorMessage = String(data: data, encoding: .utf8) {
-                print("❌ API Error: \(errorMessage)")
+                print("[ERROR] API Error: \(errorMessage)")
             }
             throw AIError.apiError(statusCode: httpResponse.statusCode)
         }
@@ -176,7 +176,7 @@ actor AIService {
             let response = try decoder.decode(GenerateImageResponse.self, from: data)
             return response
         } catch {
-            print("❌ Decode error: \(error)")
+            print("[ERROR] Decode error: \(error)")
             if let jsonString = String(data: data, encoding: .utf8) {
                 print("Response JSON: \(jsonString)")
             }
@@ -276,7 +276,7 @@ actor AIService {
             }
             return true
         } catch {
-            print("❌ Connection test failed: \(error)")
+            print("[ERROR] Connection test failed: \(error)")
             throw error
         }
     }

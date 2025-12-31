@@ -64,7 +64,7 @@ class AIGeneratorViewModel: ObservableObject {
             )
 
             generatedImage = image
-            print("✅ AI image generated successfully")
+            print("[OK] AI image generated successfully")
 
         } catch let error as AIError {
             showErrorMessage(error.errorDescription ?? "生成失败")
@@ -91,7 +91,7 @@ class AIGeneratorViewModel: ObservableObject {
             // 保存到数据库
             try await databaseManager.insertSticker(sticker)
 
-            print("✅ AI generated sticker saved: \(filename)")
+            print("[OK] AI generated sticker saved: \(filename)")
             showSuccessAlert = true
 
             // 清空生成的图片
@@ -121,7 +121,7 @@ class AIGeneratorViewModel: ObservableObject {
             if let data = try await photoItem.loadTransferable(type: Data.self),
                let image = UIImage(data: data) {
                 selectedImage = image
-                print("✅ Image loaded from picker")
+                print("[OK] Image loaded from picker")
             }
         } catch {
             showErrorMessage("加载图片失败: \(error.localizedDescription)")
@@ -135,7 +135,7 @@ class AIGeneratorViewModel: ObservableObject {
 
         do {
             availableStickers = try await databaseManager.fetchAllStickers()
-            print("✅ Loaded \(availableStickers.count) stickers for selection")
+            print("[OK] Loaded \(availableStickers.count) stickers for selection")
         } catch {
             showErrorMessage("加载表情包失败: \(error.localizedDescription)")
         }
@@ -150,14 +150,14 @@ class AIGeneratorViewModel: ObservableObject {
 
         selectedImage = image
         showStickerPicker = false
-        print("✅ Selected sticker as base image: \(sticker.filename)")
+        print("[OK] Selected sticker as base image: \(sticker.filename)")
     }
 
     // MARK: - Error Handling
     private func showErrorMessage(_ message: String) {
         errorMessage = message
         showError = true
-        print("❌ \(message)")
+        print("[ERROR] \(message)")
     }
 
     func clearError() {

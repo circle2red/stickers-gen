@@ -355,7 +355,7 @@ class EditorViewModel: ObservableObject {
             let newSticker = try await fileStorageManager.saveImage(exportedImage, filename: newFilename)
             try await databaseManager.insertSticker(newSticker)
 
-            print("✅ Image saved as new sticker: \(newFilename)")
+            print("[OK] Image saved as new sticker: \(newFilename)")
             return true
         } catch {
             showErrorMessage("保存失败: \(error.localizedDescription)")
@@ -367,7 +367,7 @@ class EditorViewModel: ObservableObject {
     private func showErrorMessage(_ message: String) {
         errorMessage = message
         showError = true
-        print("❌ \(message)")
+        print("[ERROR] \(message)")
     }
 
     func clearError() {

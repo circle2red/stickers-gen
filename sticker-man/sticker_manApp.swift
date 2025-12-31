@@ -30,6 +30,6 @@ struct sticker_manApp: App {
         // 初始化文件存储（在init中已自动初始化）
         _ = FileStorageManager.shared
 
-        print("✅ Sticker Man App initialized")
+        print("[OK] Sticker Man App initialized")
     }
 }

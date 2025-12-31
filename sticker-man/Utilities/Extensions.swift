@@ -78,7 +78,7 @@ extension UIImage {
         guard let data = imageData else { return nil }
         guard let finalImage = UIImage(data: data) else { return nil }
 
-        print("📦 Compressed: original=\(self.size), final=\(finalImage.size), size=\(data.count) bytes, quality=\(String(format: "%.1f", quality))")
+        print("[INFO] Compressed: original=\(self.size), final=\(finalImage.size), size=\(data.count) bytes, quality=\(String(format: "%.1f", quality))")
 
         return (finalImage, data)
     }

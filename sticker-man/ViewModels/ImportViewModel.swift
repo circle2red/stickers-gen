@@ -44,7 +44,7 @@ class ImportViewModel: ObservableObject {
                 // 加载图片数据
                 guard let data = try await item.loadTransferable(type: Data.self),
                       let image = UIImage(data: data) else {
-                    print("⚠️ Failed to load image from PhotosPicker")
+                    print("[WARNING] Failed to load image from PhotosPicker")
                     continue
                 }
 
@@ -64,7 +64,7 @@ class ImportViewModel: ObservableObject {
                 importedCount += 1
                 importProgress = Double(importedCount) / Double(totalCount)
             } catch {
-                print("❌ Failed to import photo: \(error)")
+                print("[ERROR] Failed to import photo: \(error)")
             }
         }
 
@@ -72,7 +72,7 @@ class ImportViewModel: ObservableObject {
         if !stickers.isEmpty {
             do {
                 try await databaseManager.insertStickers(stickers)
-                print("✅ Imported \(stickers.count) photos")
+                print("[OK] Imported \(stickers.count) photos")
             } catch {
                 showErrorMessage("数据库保存失败: \(error.localizedDescription)")
             }
@@ -98,7 +98,7 @@ class ImportViewModel: ObservableObject {
         for url in urls {
             // 开始访问安全作用域资源
             guard url.startAccessingSecurityScopedResource() else {
-                print("⚠️ Failed to access security scoped resource: \(url.lastPathComponent)")
+                print("[WARNING] Failed to access security scoped resource: \(url.lastPathComponent)")
                 continue
             }
             defer { url.stopAccessingSecurityScopedResource() }
@@ -128,7 +128,7 @@ class ImportViewModel: ObservableObject {
 
                     // 图片文件
                     guard let image = UIImage(contentsOfFile: url.path) else {
-                        print("⚠️ Failed to load image: \(filename)")
+                        print("[WARNING] Failed to load image: \(filename)")
                         continue
                     }
 
@@ -141,10 +141,10 @@ class ImportViewModel: ObservableObject {
                     importedCount += 1
                     importProgress = Double(importedCount) / Double(totalCount)
                 } else {
-                    print("⚠️ Unsupported file type: \(fileExtension)")
+                    print("[WARNING] Unsupported file type: \(fileExtension)")
                 }
             } catch {
-                print("❌ Failed to import document: \(error)")
+                print("[ERROR] Failed to import document: \(error)")
             }
         }
 
@@ -152,7 +152,7 @@ class ImportViewModel: ObservableObject {
         if !stickers.isEmpty {
             do {
                 try await databaseManager.insertStickers(stickers)
-                print("✅ Imported \(stickers.count) files")
+                print("[OK] Imported \(stickers.count) files")
             } catch {
                 showErrorMessage("数据库保存失败: \(error.localizedDescription)")
             }
@@ -180,7 +180,7 @@ class ImportViewModel: ObservableObject {
         do {
             try await unzipFile(at: url, to: tempDir)
         } catch {
-            print("❌ Failed to unzip file: \(error)")
+            print("[ERROR] Failed to unzip file: \(error)")
             throw ImportError.unzipFailed
         }
 
@@ -189,12 +189,12 @@ class ImportViewModel: ObservableObject {
 
         // 检查是否找到图片
         if imageURLs.isEmpty {
-            print("⚠️ No images found in ZIP file")
+            print("[WARNING] No images found in ZIP file")
             throw ImportError.noImagesFound
         }
 
         totalCount = imageURLs.count
-        print("📦 Found \(totalCount) images in ZIP file")
+        print("[INFO] Found \(totalCount) images in ZIP file")
 
         var stickers: [Sticker] = []
 
@@ -205,7 +205,7 @@ class ImportViewModel: ObservableObject {
             }
 
             guard let image = UIImage(contentsOfFile: imageURL.path) else {
-                print("⚠️ Failed to load image: \(imageURL.lastPathComponent)")
+                print("[WARNING] Failed to load image: \(imageURL.lastPathComponent)")
                 continue
             }
 
@@ -222,7 +222,7 @@ class ImportViewModel: ObservableObject {
             importProgress = Double(importedCount) / Double(totalCount)
         }
 
-        print("✅ Successfully imported \(stickers.count) images from ZIP")
+        print("[OK] Successfully imported \(stickers.count) images from ZIP")
         return stickers
     }
 
@@ -230,7 +230,7 @@ class ImportViewModel: ObservableObject {
     private func unzipFile(at sourceURL: URL, to destinationURL: URL) async throws {
         // 使用 Zip 库解压文件
         try Zip.unzipFile(sourceURL, destination: destinationURL, overwrite: true, password: nil)
-        print("✅ Unzipped file: \(sourceURL.lastPathComponent)")
+        print("[OK] Unzipped file: \(sourceURL.lastPathComponent)")
     }
 
     /// 查找目录中的所有图片文件
@@ -254,7 +254,7 @@ class ImportViewModel: ObservableObject {
     private func showErrorMessage(_ message: String) {
         errorMessage = message
         showError = true
-        print("❌ \(message)")
+        print("[ERROR] \(message)")
     }
 
     func clearError() {
@@ -313,7 +313,7 @@ class ImportViewModel: ObservableObject {
                 return "\(nameWithoutExt)_\(uniqueId).\(ext)"
             }
         } catch {
-            print("⚠️ Failed to check filename existence: \(error)")
+            print("[WARNING] Failed to check filename existence: \(error)")
             // 如果检查失败，直接使用带时间戳的文件名
             let timestamp = Date().unixTimestamp
             if ext.isEmpty {
