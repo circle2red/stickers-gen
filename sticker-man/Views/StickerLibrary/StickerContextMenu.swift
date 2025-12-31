@@ -12,9 +12,11 @@ enum MenuAction: Equatable {
     case editImage
     case rename
     case togglePin
+    case showExportMenu
+    case shareOriginal
     case exportJPG
     case exportPNG
-    case share
+    case exportGIF
     case delete
 }
 
@@ -24,7 +26,7 @@ struct StickerContextMenu {
     let sticker: Sticker
     let onAction: (MenuAction) -> Void
 
-    /// 生成菜单按钮
+    /// 生成主菜单按钮
     @ViewBuilder
     var buttons: some View {
         Button("编辑标签") {
@@ -43,20 +45,34 @@ struct StickerContextMenu {
             onAction(.togglePin)
         }
 
-        Button("导出为JPG") {
-            onAction(.exportJPG)
-        }
-
-        Button("导出为PNG") {
-            onAction(.exportPNG)
-        }
-
-        Button("分享") {
-            onAction(.share)
+        Button("分享/导出") {
+            onAction(.showExportMenu)
         }
 
         Button("删除", role: .destructive) {
             onAction(.delete)
+        }
+
+        Button("取消", role: .cancel) {}
+    }
+
+    /// 生成导出子菜单按钮
+    @ViewBuilder
+    var exportButtons: some View {
+        Button("原格式分享") {
+            onAction(.shareOriginal)
+        }
+
+        Button("导出为 JPG") {
+            onAction(.exportJPG)
+        }
+
+        Button("导出为 PNG") {
+            onAction(.exportPNG)
+        }
+
+        Button("导出为 GIF") {
+            onAction(.exportGIF)
         }
 
         Button("取消", role: .cancel) {}

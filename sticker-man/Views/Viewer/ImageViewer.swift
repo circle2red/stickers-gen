@@ -17,6 +17,7 @@ struct ImageViewerView: View {
 
     @State private var currentIndex: Int
     @State private var showingMenu = false
+    @State private var showingExportMenu = false
 
     init(viewModel: StickerLibraryViewModel, initialIndex: Int, onMenuAction: @escaping (MenuAction, Sticker) -> Void) {
         self.viewModel = viewModel
@@ -49,6 +50,13 @@ struct ImageViewerView: View {
             titleVisibility: .visible
         ) {
             menuButtons
+        }
+        .confirmationDialog(
+            "分享/导出",
+            isPresented: $showingExportMenu,
+            titleVisibility: .visible
+        ) {
+            exportMenuButtons
         }
     }
 
@@ -146,9 +154,23 @@ struct ImageViewerView: View {
     private var menuButtons: some View {
         if let sticker = currentSticker {
             StickerContextMenu(sticker: sticker) { action in
-                onMenuAction(action, sticker)
+                if action == .showExportMenu {
+                    showingExportMenu = true
+                } else {
+                    onMenuAction(action, sticker)
+                }
             }
             .buttons
+        }
+    }
+
+    @ViewBuilder
+    private var exportMenuButtons: some View {
+        if let sticker = currentSticker {
+            StickerContextMenu(sticker: sticker) { action in
+                onMenuAction(action, sticker)
+            }
+            .exportButtons
         }
     }
 }

@@ -39,6 +39,7 @@ struct StickerLibraryView: View {
     // Sheet states
     @State private var showingTagEditor = false
     @State private var showingActionSheet = false
+    @State private var showingExportMenu = false
     @State private var showingImport = false
     @State private var viewerIndex: IdentifiableViewerIndex?
     @State private var selectedSticker: Sticker?
@@ -230,6 +231,18 @@ struct StickerLibraryView: View {
                 .buttons
             }
         }
+        .confirmationDialog(
+            "分享/导出",
+            isPresented: $showingExportMenu,
+            titleVisibility: .visible
+        ) {
+            if let sticker = selectedSticker {
+                StickerContextMenu(sticker: sticker) { action in
+                    handleMenuAction(action, sticker: sticker)
+                }
+                .exportButtons
+            }
+        }
         .alert("确认删除", isPresented: $showingBatchDeleteConfirmation) {
             Button("取消", role: .cancel) {}
             Button("删除", role: .destructive) {
@@ -325,7 +338,8 @@ struct StickerLibraryView: View {
 
     private func handleShare(_ sticker: Sticker) {
         Task {
-            if let url = await viewModel.exportSticker(sticker, format: "jpg") {
+            // 原格式分享：使用sticker的原始格式
+            if let url = await viewModel.exportSticker(sticker, format: sticker.format) {
                 await MainActor.run {
                     shareItem = IdentifiableURL(url: url)
                 }
@@ -411,12 +425,16 @@ struct StickerLibraryView: View {
         switch action {
         case .togglePin:
             handleTogglePin(sticker)
+        case .showExportMenu:
+            showingExportMenu = true
+        case .shareOriginal:
+            handleShare(sticker)
         case .exportJPG:
             handleExport(sticker, format: "jpg")
         case .exportPNG:
             handleExport(sticker, format: "png")
-        case .share:
-            handleShare(sticker)
+        case .exportGIF:
+            handleExport(sticker, format: "gif")
         default:
             break
         }
